@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
       - uses: actions-rs/toolchain@v1.0.7
         with:
           toolchain: nightly-2022-09-22
