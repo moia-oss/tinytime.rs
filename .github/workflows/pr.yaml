@@ -16,7 +16,7 @@ jobs:
         with:
           override: true
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
         with:
           sharedKey: debug-build
       - run: make test
@@ -36,7 +36,7 @@ jobs:
         with:
           override: true
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
         with:
           sharedKey: debug-build-nightly
       - run: make lint
