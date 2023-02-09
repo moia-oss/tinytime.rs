@@ -73,7 +73,7 @@ impl Time {
     /// # Example
     ///
     /// ```
-    /// use time::Time;
+    /// use tinytime::Time;
     /// assert_eq!("∞", Time::MAX.to_rfc3339());
     /// ```
     pub fn to_rfc3339(self) -> String {
@@ -88,7 +88,7 @@ impl Time {
     /// # Example
     ///
     /// ```
-    /// use time::Time;
+    /// use tinytime::Time;
     /// assert_eq!("∞", Time::MAX.format("whatever").to_string());
     /// ```
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
@@ -108,8 +108,8 @@ impl Time {
     ///
     /// ## Example
     /// ```
-    /// use time::Duration;
-    /// use time::Time;
+    /// use tinytime::Duration;
+    /// use tinytime::Time;
     /// assert_eq!(
     ///     Ok(Time::hours(2) + Duration::minutes(51) + Duration::seconds(7) + Duration::millis(123)),
     ///     Time::parse_from_rfc3339("1970-01-01T02:51:07.123999Z")
@@ -137,8 +137,8 @@ impl Time {
     /// # Examples
     ///
     /// ```
-    /// # use time::Duration;
-    /// # use time::Time;
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
     /// assert_eq!(
     ///     Time::minutes(7).round_down(Duration::minutes(5)),
     ///     Time::minutes(5)
@@ -159,8 +159,8 @@ impl Time {
     /// # Examples
     ///
     /// ```
-    /// # use time::Duration;
-    /// # use time::Time;
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
     /// assert_eq!(
     ///     Time::minutes(7).round_up(Duration::minutes(5)),
     ///     Time::minutes(10)
@@ -183,8 +183,8 @@ impl Time {
     ///
     /// # Examples
     /// ```
-    /// # use time::Duration;
-    /// # use time::Time;
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
     /// assert_eq!(
     ///     Time::minutes(8).checked_sub(Duration::minutes(5)),
     ///     Some(Time::minutes(3))
@@ -289,9 +289,9 @@ impl TimeWindow {
     /// # Examples
     ///
     /// ```
-    /// # use time::Duration;
-    /// # use time::Time;
-    /// # use time::TimeWindow;
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
     /// let mut x = TimeWindow::from_duration(Time::seconds(1), Duration::seconds(2));
     /// assert_eq!(Time::seconds(1), x.start());
     /// assert_eq!(Time::seconds(3), x.end());
@@ -349,9 +349,9 @@ impl TimeWindow {
     /// # Examples
     ///
     /// ```
-    /// # use time::Duration;
-    /// # use time::Time;
-    /// # use time::TimeWindow;
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
     /// let mut x = TimeWindow::from_seconds(1, 2);
     /// assert_eq!(Some(Duration::seconds(1)), x.extend_end(Time::seconds(3)));
     /// assert_eq!(Time::seconds(3), x.end());
@@ -373,9 +373,9 @@ impl TimeWindow {
     /// # Examples
     ///
     /// ```
-    /// # use time::Duration;
-    /// # use time::Time;
-    /// # use time::TimeWindow;
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
     /// let mut x = TimeWindow::from_seconds(1, 2);
     /// assert_eq!(
     ///     Time::seconds(5),
@@ -395,8 +395,8 @@ impl TimeWindow {
     /// # Examples
     ///
     /// ```
-    /// # use time::Time;
-    /// # use time::TimeWindow;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
     /// let mut x = TimeWindow::from_seconds(1, 3);
     /// x.shrink_towards_end(Time::EPOCH);
     /// assert_eq!(Time::seconds(1), x.start());
@@ -420,8 +420,8 @@ impl TimeWindow {
     /// # Examples
     ///
     /// ```
-    /// # use time::Time;
-    /// # use time::TimeWindow;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
     /// let mut x = TimeWindow::from_seconds(1, 3);
     /// x.shrink_towards_start(Time::seconds(4));
     /// assert_eq!(Time::seconds(3), x.end());
@@ -444,8 +444,8 @@ impl TimeWindow {
     /// # Examples
     ///
     /// ```
-    /// # use time::Time;
-    /// # use time::TimeWindow;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
     /// let mut x = TimeWindow::from_seconds(5, 10);
     /// assert!(x.overlaps(&TimeWindow::from_seconds(5, 10)));
     /// assert!(x.overlaps(&TimeWindow::from_seconds(3, 12)));
@@ -903,7 +903,7 @@ impl From<std::time::Duration> for Duration {
 ///
 /// # Example
 /// ```
-/// # use time::Duration;
+/// # use tinytime::Duration;
 /// # use std::str::FromStr;
 /// assert_eq!(Duration::millis(2), Duration::from_str("2ms").unwrap());
 /// assert_eq!(Duration::seconds(3), Duration::from_str("3s").unwrap());
