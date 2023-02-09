@@ -1,0 +1,18 @@
+[package]
+name = "tinytime"
+description = "Low overhead implementation of time-related concepts."
+homepage = "https://github.com/moia-oss/tinytime.rs"
+repository = "https://github.com/moia-oss/tinytime.rs"
+edition = "2021"
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+chrono = "0.4.22"
+regex = "1.6.0"
+lazy_static = "1.4.0"
+serde = { version = "1.0.144", features = ["derive"], default-features = false }
+
+[dev-dependencies]
+serde_test = "1.0.144"
+serde_json = "1.0.85"
