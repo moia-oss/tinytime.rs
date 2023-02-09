@@ -1,0 +1,6 @@
+# github codeowners file
+#
+# https://help.github.com/articles/about-codeowners/
+#
+*   @fabian-braun @jankeu @jan-xyz @rinde @lxwbr @AlexWerff @urmaul @Felerius
+/CODEOWNERS @fabian-braun @jankeu @jan-xyz @lxwbr @AlexWerff @urmaul @Felerius

@@ -1,6 +1,6 @@
 # It's Rust `time`!
 
-Low overhead implementation of time-related concepts by the Fleet Optimization team.
+Low overhead implementation of time-related concepts.
 
 ## Who is `time` for?
 
