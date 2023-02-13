@@ -1,0 +1,48 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-on-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - name: Calculate next version
+        id: calc-version
+        uses: rymndhng/release-on-push-action@master
+        with:
+          bump_version_scheme: norelease
+          tag_prefix: ""
+          dry_run: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set version
+        run: |
+          sed -i "s/^version = \".*\"$/version = \"${{ steps.calc-version.outputs.version }}\"/" Cargo.toml
+      - name: Publish new version to main
+        run: |
+          git config --global user.email "rust-maintainers@moia.io"
+          git config --global user.name "MOIA Rust Maintainers"
+          git commit -am "Release ${{ steps.calc-version.outputs.version }}"
+          git push
+      - name: Create github release
+        uses: rymndhng/release-on-push-action@master
+        with:
+          bump_version_scheme: norelease
+          tag_prefix: ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to crates.io
+        run: cargo login "${{ secrets.CRATES_IO_TOKEN }}"
+      - name: Publish
+        run: cargo publish
