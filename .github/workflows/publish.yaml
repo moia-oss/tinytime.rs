@@ -36,7 +36,7 @@ jobs:
         run: |
           git config --global user.email "rust-maintainers@moiaorg.onmicrosoft.com"
           git config --global user.name "MOIA Rust Maintainers"
-          git commit -am "Release ${{ steps.calc_version.outputs.version }}"
+          git commit -am "Release ${{ steps.calc_version.outputs.version }} [skip ci]"
           git push
       - name: Create github release
         if: ${{ steps.calc_version.outputs.version }} != ""
