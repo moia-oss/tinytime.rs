@@ -31,7 +31,7 @@ jobs:
           sed -i "s/^version = \".*\"$/version = \"${{ steps.calc-version.outputs.version }}\"/" Cargo.toml
       - name: Publish new version to main
         run: |
-          git config --global user.email "rust-maintainers@moia.io"
+          git config --global user.email "rust-maintainers@moiaorg.onmicrosoft.com"
           git config --global user.name "MOIA Rust Maintainers"
           git commit -am "Release ${{ steps.calc-version.outputs.version }}"
           git push
