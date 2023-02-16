@@ -203,6 +203,11 @@ impl Time {
             Some(*self - rhs)
         }
     }
+
+    pub fn since_epoch(&self) -> Duration {
+        debug_assert!(isize::try_from(self.0).is_ok());
+        Duration::millis(self.as_millis() as isize)
+    }
 }
 
 /// Allows deserializing from RFC 3339 strings and unsigned integers.
@@ -1065,6 +1070,13 @@ mod time_test {
         let time = Time::EPOCH + Duration::hours(48) + Duration::minutes(7);
         let json = serde_json::to_string(&time).unwrap();
         assert_eq!(time, serde_json::from_str(json.as_str()).unwrap());
+    }
+
+    #[test]
+    fn test_time_since_epoch() {
+        let expected = Duration::seconds(3);
+        let actual = Time::seconds(3).since_epoch();
+        assert_eq!(expected, actual);
     }
 }
 
