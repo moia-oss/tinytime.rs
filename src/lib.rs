@@ -676,7 +676,7 @@ impl TryFrom<Duration> for Time {
     type Error = &'static str;
     fn try_from(duration: Duration) -> Result<Self, Self::Error> {
         if duration.is_non_negative() {
-            Ok(Time::millis(duration.0 as usize))
+            Ok(Time::millis(duration.as_millis() as usize))
         } else {
             Err("Duration cannot be negative.")
         }
