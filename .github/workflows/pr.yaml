@@ -1,37 +1,39 @@
-name: PR
+name: pr
 
-on:
-  pull_request:
-    branches: ['*']
+on: [pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1.0.7
+      - run: echo "RUST_TOOLCHAIN=$(cat ./rust-toolchain)" >> $GITHUB_ENV
+      - uses: dtolnay/rust-toolchain@master
         with:
-          override: true
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
         with:
-          sharedKey: debug-build
-      - run: make test
+          shared-key: debug-build
+      - name: Make test
+        run: make test
   lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1.0.7
+      - run: |
+          echo "RUST_TOOLCHAIN=$(cat ./rust-toolchain)" >> $GITHUB_ENV
+          echo "RUST_TOOLCHAIN_NIGHTLY=$(cat ./rust-toolchain-nightly)" >> $GITHUB_ENV
+      - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-2023-01-26
-          override: true
+          toolchain: ${{ env.RUST_TOOLCHAIN_NIGHTLY }}
           components: rustfmt
-      - uses: actions-rs/toolchain@v1.0.7
+      - uses: dtolnay/rust-toolchain@master
         with:
-          override: true
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
         with:
-          sharedKey: debug-build-nightly
-      - run: make lint
-
+          shared-key: debug-build-nightly
+      - name: Make lint
+        run: make lint
