@@ -1,4 +1,4 @@
-RUST_NIGHTLY_VERSION  := nightly-2023-01-26
+RUST_NIGHTLY_VERSION  := nightly-2023-02-16
 GRCOV_VERSION         := 0.8.13
 
 install-nightly:
