@@ -672,6 +672,17 @@ impl From<f64> for Duration {
     }
 }
 
+impl TryFrom<Duration> for Time {
+    type Error = &'static str;
+    fn try_from(duration: Duration) -> Result<Self, Self::Error> {
+        if duration.is_non_negative() {
+            Ok(Time::millis(duration.0 as usize))
+        } else {
+            Err("Duration cannot be negative.")
+        }
+    }
+}
+
 impl From<&Duration> for f64 {
     fn from(num: &Duration) -> Self {
         num.0 as f64
@@ -1077,6 +1088,18 @@ mod time_test {
         let expected = Duration::seconds(3);
         let actual = Time::seconds(3).since_epoch();
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_time_from_duration() {
+        let duration_pos = Duration::seconds(3);
+        assert_eq!(Ok(Time::seconds(3)), Time::try_from(duration_pos));
+
+        let duration_neg = Duration::seconds(-3);
+        assert_eq!(
+            Err("Duration cannot be negative."),
+            Time::try_from(duration_neg)
+        );
     }
 }
 
