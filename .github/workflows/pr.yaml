@@ -41,14 +41,14 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Calculate next version
-          id: calc_version
-          uses: rymndhng/release-on-push-action@master
-          with:
-            bump_version_scheme: patch
-            tag_prefix: ""
-            dry_run: true
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: calc_version
+        uses: rymndhng/release-on-push-action@master
+        with:
+          bump_version_scheme: patch
+          tag_prefix: ""
+          dry_run: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Set version
         if: ${{ steps.calc_version.outputs.version }} != ""
         run: |
