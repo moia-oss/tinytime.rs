@@ -54,6 +54,12 @@ jobs:
         if: ${{ steps.calc_version.outputs.version }} != ""
         run: |
           sed -i "s/^version = \".*\"$/version = \"${{ steps.calc_version.outputs.version }}\"/" Cargo.toml
+      - name: Commit new version to main but don't push
+        if: ${{ steps.calc_version.outputs.version }} != ""
+        run: |
+          git config --global user.email "rust-maintainers@moiaorg.onmicrosoft.com"
+          git config --global user.name "MOIA Rust Maintainers"
+          git commit -am "Phantom release ${{ steps.calc_version.outputs.version }} [skip ci]"
       - name: Check semver
         uses: obi1kenobi/cargo-semver-checks-action@v1
         with:
