@@ -148,7 +148,7 @@ impl Time {
     ///     Time::minutes(5)
     /// );
     /// ```
-    pub fn round_down(&self, step_size: Duration) -> Time {
+    pub fn round_down_breaking(&self, step_size: Duration) -> Time {
         let time_milli = self.as_millis();
         let part = time_milli % step_size.as_millis_unsigned();
         Time::millis(time_milli - part)
