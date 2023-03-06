@@ -37,3 +37,30 @@ jobs:
           shared-key: debug-build-nightly
       - name: Make lint
         run: make lint
+  semver:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Calculate next version
+        id: calc_version
+        uses: rymndhng/release-on-push-action@master
+        with:
+          bump_version_scheme: patch
+          tag_prefix: ""
+          dry_run: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set version
+        if: ${{ steps.calc_version.outputs.version }} != ""
+        run: |
+          sed -i "s/^version = \".*\"$/version = \"${{ steps.calc_version.outputs.version }}\"/" Cargo.toml
+      - name: Commit new version to main but don't push
+        if: ${{ steps.calc_version.outputs.version }} != ""
+        run: |
+          git config --global user.email "rust-maintainers@moiaorg.onmicrosoft.com"
+          git config --global user.name "MOIA Rust Maintainers"
+          git commit -am "Phantom release ${{ steps.calc_version.outputs.version }} [skip ci]"
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v1
+        with:
+          version-tag-prefix: ''
