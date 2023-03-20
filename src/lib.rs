@@ -707,11 +707,19 @@ impl AddAssign<Time> for Time {
 
 impl AddAssign<Duration> for Time {
     fn add_assign(&mut self, rhs: Duration) {
-        debug_assert!(
-            self.0.checked_add(rhs.0 as usize).is_some(),
-            "overflow detected: {self:?} += {rhs:?}"
-        );
-        self.0 += rhs.0 as usize;
+        if rhs.is_negative() {
+            debug_assert!(
+                self.0.checked_sub(rhs.0.unsigned_abs()).is_some(),
+                "overflow detected: {self:?} + {rhs:?}"
+            );
+            self.0 -= rhs.0.unsigned_abs();
+        } else {
+            debug_assert!(
+                self.0.checked_add(rhs.0.unsigned_abs()).is_some(),
+                "overflow detected: {self:?} + {rhs:?}"
+            );
+            self.0 += rhs.0.unsigned_abs();
+        }
     }
 }
 
@@ -739,11 +747,19 @@ impl Sub<Duration> for Time {
     type Output = Time;
 
     fn sub(self, rhs: Duration) -> Self::Output {
-        debug_assert!(
-            isize::try_from(self.0).is_ok() && (self.0 as isize).checked_sub(rhs.0).is_some(),
-            "overflow detected: {self:?} - {rhs:?}"
-        );
-        Time(((self.0 as isize) - rhs.0) as usize)
+        if rhs.is_negative() {
+            debug_assert!(
+                self.0.checked_add(rhs.0.unsigned_abs()).is_some(),
+                "overflow detected: {self:?} + {rhs:?}"
+            );
+            Time(self.0 + rhs.0.unsigned_abs())
+        } else {
+            debug_assert!(
+                self.0.checked_sub(rhs.0.unsigned_abs()).is_some(),
+                "overflow detected: {self:?} + {rhs:?}"
+            );
+            Time(self.0 - rhs.0.unsigned_abs())
+        }
     }
 }
 
@@ -751,25 +767,33 @@ impl Sub<Time> for Time {
     type Output = Duration;
 
     fn sub(self, rhs: Time) -> Self::Output {
-        debug_assert!(
-            isize::try_from(self.0).is_ok() && isize::try_from(rhs.0).is_ok(),
-            "overflow detected: {self:?} - {rhs:?}"
-        );
-        Duration(self.0 as isize - rhs.0 as isize)
+        if self > rhs {
+            debug_assert!(
+                isize::try_from(self.0 - rhs.0).is_ok(),
+                "Overflow detected, Time instances are too far apart: {self:?} - {rhs:?}"
+            );
+            Duration((self.0 - rhs.0) as isize)
+        } else {
+            debug_assert!(
+                isize::try_from(rhs.0 - self.0).is_ok(),
+                "Overflow detected, Time instances are too far apart: {self:?} - {rhs:?}"
+            );
+            Duration(-((rhs.0 - self.0) as isize))
+        }
     }
 }
 
-impl Sub<&Time> for Time {
-    type Output = Duration;
+// impl Sub<&Time> for Time {
+//     type Output = Duration;
 
-    fn sub(self, rhs: &Time) -> Self::Output {
-        debug_assert!(
-            isize::try_from(self.0).is_ok() && isize::try_from(rhs.0).is_ok(),
-            "overflow detected: {self:?} - {rhs:?}"
-        );
-        Duration(self.0 as isize - rhs.0 as isize)
-    }
-}
+//     fn sub(self, rhs: &Time) -> Self::Output {
+//         debug_assert!(
+//             isize::try_from(self.0).is_ok() && isize::try_from(rhs.0).is_ok(),
+//             "overflow detected: {self:?} - {rhs:?}"
+//         );
+//         Duration(self.0 as isize - rhs.0 as isize)
+//     }
+// }
 
 impl AddAssign<Duration> for Duration {
     fn add_assign(&mut self, rhs: Duration) {
@@ -1237,11 +1261,40 @@ mod duration_test {
 
     #[test]
     fn time_add_assign_duration() {
-        let mut time = Time::millis(1);
-        let duration = Duration::millis(2);
-        time += duration;
+        let mut small_time = Time::millis(1);
         let expected_time = Time::millis(3);
-        assert_eq!(expected_time, time);
+        let duration = Duration::millis(2);
+        // small time: add
+        assert_eq!(expected_time, small_time + duration);
+        // small time: add assign
+        small_time += duration;
+        assert_eq!(expected_time, small_time);
+
+        let mut big_time = Time::hours(2_600_000_000_000);
+        assert!(big_time > Time::EPOCH + Duration::MAX);
+        // big time: add
+        assert_eq!(
+            Time::hours(2_600_000_000_010),
+            big_time + Duration::hours(10)
+        );
+        // big time: add assign
+        big_time += Duration::hours(10);
+        assert_eq!(Time::hours(2_600_000_000_010), big_time);
+    }
+
+    #[test]
+    fn time_sub_time() {
+        // small numbers
+        let small_time = Time::minutes(7);
+        let small_time2 = Time::minutes(3);
+        assert_eq!(Duration::minutes(4), small_time - small_time2);
+        assert_eq!(Duration::minutes(-4), small_time2 - small_time);
+
+        // big numbers
+        let big_time = Time::hours(2_600_000_000_000);
+        let big_time2 = Time::hours(2_600_000_000_012);
+        assert_eq!(Duration::hours(-12), big_time - big_time2);
+        assert_eq!(Duration::hours(12), big_time2 - big_time);
     }
 
     #[test]
