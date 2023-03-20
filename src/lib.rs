@@ -1278,7 +1278,7 @@ mod duration_test {
     }
 
     #[test]
-    fn time_add_assign_duration() {
+    fn time_add_duration() {
         let mut small_time = Time::millis(1);
         let expected_time = Time::millis(3);
         let duration = Duration::millis(2);
