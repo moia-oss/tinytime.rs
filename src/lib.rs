@@ -719,11 +719,19 @@ impl Add<Duration> for Time {
     type Output = Time;
 
     fn add(self, rhs: Duration) -> Self::Output {
-        debug_assert!(
-            isize::try_from(self.0).is_ok() && self.0.checked_add(rhs.0 as usize).is_some(),
-            "overflow detected: {self:?} + {rhs:?}"
-        );
-        Time(((self.0 as isize) + rhs.0) as usize)
+        if rhs.is_negative() {
+            debug_assert!(
+                self.0.checked_sub(rhs.0.unsigned_abs()).is_some(),
+                "overflow detected: {self:?} + {rhs:?}"
+            );
+            Time(self.0 - rhs.0.unsigned_abs())
+        } else {
+            debug_assert!(
+                self.0.checked_add(rhs.0.unsigned_abs()).is_some(),
+                "overflow detected: {self:?} + {rhs:?}"
+            );
+            Time(self.0 + rhs.0.unsigned_abs())
+        }
     }
 }
 
