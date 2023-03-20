@@ -801,17 +801,17 @@ impl Sub<Time> for Time {
     }
 }
 
-// impl Sub<&Time> for Time {
-//     type Output = Duration;
+impl Sub<&Time> for Time {
+    type Output = Duration;
 
-//     fn sub(self, rhs: &Time) -> Self::Output {
-//         debug_assert!(
-//             isize::try_from(self.0).is_ok() && isize::try_from(rhs.0).is_ok(),
-//             "overflow detected: {self:?} - {rhs:?}"
-//         );
-//         Duration(self.0 as isize - rhs.0 as isize)
-//     }
-// }
+    fn sub(self, rhs: &Time) -> Self::Output {
+        debug_assert!(
+            isize::try_from(self.0).is_ok() && isize::try_from(rhs.0).is_ok(),
+            "overflow detected: {self:?} - {rhs:?}"
+        );
+        Duration(self.0 as isize - rhs.0 as isize)
+    }
+}
 
 impl AddAssign<Duration> for Duration {
     fn add_assign(&mut self, rhs: Duration) {
