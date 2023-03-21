@@ -683,12 +683,6 @@ impl TryFrom<Duration> for Time {
     }
 }
 
-impl From<&Duration> for f64 {
-    fn from(num: &Duration) -> Self {
-        num.0 as f64
-    }
-}
-
 impl From<Duration> for f64 {
     fn from(num: Duration) -> Self {
         num.0 as f64
@@ -751,18 +745,6 @@ impl Sub<Time> for Time {
     }
 }
 
-impl Sub<&Time> for Time {
-    type Output = Duration;
-
-    fn sub(self, rhs: &Time) -> Self::Output {
-        debug_assert!(
-            isize::try_from(self.0).is_ok() && isize::try_from(rhs.0).is_ok(),
-            "overflow detected: {self:?} - {rhs:?}"
-        );
-        Duration(self.0 as isize - rhs.0 as isize)
-    }
-}
-
 impl AddAssign<Duration> for Duration {
     fn add_assign(&mut self, rhs: Duration) {
         debug_assert!(
@@ -804,12 +786,6 @@ impl Sub<Duration> for Duration {
             "overflow detected: {self:?} - {rhs:?}"
         );
         Duration(self.0 - rhs.0)
-    }
-}
-
-impl<'a> Sum<&'a Duration> for Duration {
-    fn sum<I: Iterator<Item = &'a Duration>>(iter: I) -> Self {
-        iter.copied().sum()
     }
 }
 
@@ -882,19 +858,6 @@ impl Div<Duration> for Duration {
     fn div(self, rhs: Duration) -> Self::Output {
         debug_assert_ne!(
             rhs,
-            Duration::ZERO,
-            "Dividing by zero results in INF. This is probably not what you want."
-        );
-        self.0 as f64 / rhs.0 as f64
-    }
-}
-
-impl Div<&Duration> for Duration {
-    type Output = f64;
-
-    fn div(self, rhs: &Duration) -> Self::Output {
-        debug_assert_ne!(
-            *rhs,
             Duration::ZERO,
             "Dividing by zero results in INF. This is probably not what you want."
         );
