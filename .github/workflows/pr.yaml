@@ -60,6 +60,9 @@ jobs:
           git config --global user.email "rust-maintainers@moiaorg.onmicrosoft.com"
           git config --global user.name "MOIA Rust Maintainers"
           git commit -am "Phantom release ${{ steps.calc_version.outputs.version }} [skip ci]"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: semver
       - name: Check semver
         uses: obi1kenobi/cargo-semver-checks-action@v1
         with:
