@@ -373,13 +373,11 @@ impl TimeWindow {
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
     pub fn extend_end(&mut self, new_end: Time) -> Option<Duration> {
-        if new_end > self.end {
+        (new_end > self.end).then(|| {
             let diff = new_end - self.end;
             self.set_end(new_end);
-            Some(diff)
-        } else {
-            None
-        }
+            diff
+        })
     }
 
     /// Extends time window end by the given duration.
