@@ -93,10 +93,10 @@ impl Time {
         let secs = self.0 / 1000;
         let nanos = (self.0 % 1000) * 1_000_000;
         // casting to u32 is safe here because it is guaranteed that the value is in
-        // 0..1_000_000
+        // 0..1_000_000_000
         #[allow(clippy::cast_possible_truncation)]
         let nanos = if nanos.is_negative() {
-            1_000_000 - nanos.unsigned_abs()
+            1_000_000_000 - nanos.unsigned_abs()
         } else {
             nanos.unsigned_abs()
         } as u32;
@@ -904,7 +904,7 @@ impl From<Duration> for std::time::Duration {
         #[allow(clippy::cast_sign_loss)] // caught by the debug_assert above
         let secs = (input.0 / 1000) as u64;
         // casting to u32 is safe here because it is guaranteed that the value is in
-        // 0..1_000_000. The sign loss is caught by the debug_assert above
+        // 0..1_000_000_000. The sign loss is caught by the debug_assert above.
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         let nanos = ((input.0 % 1000) * 1_000_000) as u32;
         std::time::Duration::new(secs, nanos)
