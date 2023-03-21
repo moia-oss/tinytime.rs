@@ -34,8 +34,7 @@ use serde::Serialize;
 
 /// A point in time.
 ///
-/// Low overhead time representation. Cannot be negative. Internally represented
-/// as milliseconds.
+/// Low overhead time representation. Internally represented as milliseconds.
 #[derive(
     Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Debug, Default, Serialize, Deref, From, Into,
 )]
@@ -93,7 +92,16 @@ impl Time {
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
         let secs = self.0 / 1000;
         let nanos = (self.0 % 1000) * 1_000_000;
-        let t = NaiveDateTime::from_timestamp_opt(secs, nanos as u32);
+        // casting to u32 is safe here because it is guaranteed that the value is in
+        // 0..1_000_000
+        #[allow(clippy::cast_possible_truncation)]
+        let nanos = if nanos.is_negative() {
+            1_000_000 - nanos.unsigned_abs()
+        } else {
+            nanos.unsigned_abs()
+        } as u32;
+
+        let t = NaiveDateTime::from_timestamp_opt(secs, nanos);
         match t {
             None => DelayedFormat::new(None, None, StrftimeItems::new("∞")),
             Some(v) => v.format(fmt),
@@ -254,7 +262,14 @@ impl<'de> Visitor<'de> for TimeVisitor {
 
 impl From<Time> for std::time::SystemTime {
     fn from(input: Time) -> Self {
-        std::time::UNIX_EPOCH + std::time::Duration::from_millis(input.0 as u64)
+        debug_assert!(
+            input.0 >= 0,
+            "cannot convert a negative Time instance {input:?} to std::time::SystemTime"
+        );
+        #[allow(clippy::cast_sign_loss)] // the debug_assert above should catch this case
+        {
+            std::time::UNIX_EPOCH + std::time::Duration::from_millis(input.0 as u64)
+        }
     }
 }
 
@@ -527,7 +542,10 @@ impl Duration {
     /// Returns the number of non-negative whole milliseconds in the Duration
     /// instance.
     pub fn as_millis_unsigned(&self) -> u64 {
-        max(self.0, 0) as u64
+        #[allow(clippy::cast_sign_loss)]
+        {
+            max(self.0, 0) as u64
+        }
     }
 
     /// Returns the number of whole seconds in the Duration instance.
@@ -538,7 +556,10 @@ impl Duration {
     /// Returns the number of non-negative whole seconds in the Duration
     /// instance.
     pub fn as_seconds_unsigned(&self) -> u64 {
-        max(0, self.0 / 1000) as u64
+        #[allow(clippy::cast_sign_loss)]
+        {
+            max(0, self.0 / 1000) as u64
+        }
     }
 
     /// Returns the number of whole minutes in the Duration instance.
@@ -569,13 +590,13 @@ impl<'de> Deserialize<'de> for Duration {
 
 impl PartialEq<std::time::Duration> for Duration {
     fn eq(&self, other: &std::time::Duration) -> bool {
-        (self.as_millis_unsigned() as u128).eq(&other.as_millis())
+        (u128::from(self.as_millis_unsigned())).eq(&other.as_millis())
     }
 }
 
 impl PartialOrd<std::time::Duration> for Duration {
     fn partial_cmp(&self, other: &std::time::Duration) -> Option<Ordering> {
-        (self.as_millis_unsigned() as u128).partial_cmp(&other.as_millis())
+        (u128::from(self.as_millis_unsigned())).partial_cmp(&other.as_millis())
     }
 }
 
@@ -660,7 +681,10 @@ impl Display for Duration {
 
 impl From<f64> for Duration {
     fn from(num: f64) -> Self {
-        Duration::millis(num as i64)
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            Duration::millis(num.round() as i64)
+        }
     }
 }
 
@@ -829,7 +853,10 @@ impl Mul<f64> for Duration {
     type Output = Duration;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        Duration((self.0 as f64 * rhs).round() as i64)
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            Duration((self.0 as f64 * rhs).round() as i64)
+        }
     }
 }
 
@@ -850,7 +877,10 @@ impl Div<f64> for Duration {
             rhs, 0.0,
             "Dividing by zero results in INF. This is probably not what you want."
         );
-        Duration((self.0 as f64 / rhs).round() as i64)
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            Duration((self.0 as f64 / rhs).round() as i64)
+        }
     }
 }
 
@@ -869,13 +899,26 @@ impl Div<Duration> for Duration {
 
 impl From<Duration> for std::time::Duration {
     fn from(input: Duration) -> Self {
-        let secs = input.0 / 1000;
-        let nanos = (input.0 % 1000) * 1_000_000;
-        std::time::Duration::new(secs as u64, nanos as u32)
+        debug_assert!(
+            input.is_non_negative(),
+            "Negative Duration {input} cannot be converted to std::time::Duration"
+        );
+        #[allow(clippy::cast_sign_loss)] // caught by the debug_assert above
+        let secs = (input.0 / 1000) as u64;
+        // casting to u32 is safe here because it is guaranteed that the value is in
+        // 0..1_000_000. The sign loss is caught by the debug_assert above
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+        let nanos = ((input.0 % 1000) * 1_000_000) as u32;
+        std::time::Duration::new(secs, nanos)
     }
 }
 impl From<std::time::Duration> for Duration {
     fn from(input: std::time::Duration) -> Self {
+        debug_assert!(
+            i64::try_from(input.as_millis()).is_ok(),
+            "Input std::time::Duration ({input:?}) is too large to be converted to tinytime::Duration"
+        );
+        #[allow(clippy::cast_possible_truncation)]
         Duration::millis(input.as_millis() as i64)
     }
 }
@@ -974,22 +1017,22 @@ mod time_test {
             },
             TestCase {
                 name: "i16::MAX + 1",
-                input: Time::seconds(i16::MAX as i64 + 1),
+                input: Time::seconds(i64::from(i16::MAX) + 1),
                 expected: "1970-01-01T09:06:08+00:00".to_string(),
             },
             TestCase {
                 name: "i32::MAX + 1",
-                input: Time::seconds(i32::MAX as i64 + 1),
+                input: Time::seconds(i64::from(i32::MAX) + 1),
                 expected: "2038-01-19T03:14:08+00:00".to_string(),
             },
             TestCase {
                 name: "u32::MAX + 1",
-                input: Time::seconds(u32::MAX as i64 + 1),
+                input: Time::seconds(i64::from(u32::MAX) + 1),
                 expected: "2106-02-07T06:28:16+00:00".to_string(),
             },
             TestCase {
                 name: "very large",
-                input: Time::seconds(i32::MAX as i64 * 3500),
+                input: Time::seconds(i64::from(i32::MAX) * 3500),
                 expected: "+240148-08-31T19:28:20+00:00".to_string(),
             },
             TestCase {
@@ -999,7 +1042,7 @@ mod time_test {
             },
             TestCase {
                 name: "i16::MIN",
-                input: Time::seconds(i16::MIN as i64),
+                input: Time::seconds(i64::from(i16::MIN)),
                 expected: "1969-12-31T14:53:52+00:00".to_string(),
             },
             TestCase {
