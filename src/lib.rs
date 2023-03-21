@@ -2,6 +2,47 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![warn(clippy::disallowed_types)]
 //! Low overhead implementation of time related concepts.
+//!
+//!  # Operator support
+//! ```no_run
+//! # use tinytime::Duration;
+//! # use tinytime::Time;
+//! # let mut time = Time::hours(3);
+//! # let duration = Duration::minutes(4);
+//!                                         // | left       | operator | right    | result     |
+//!                                         // | ---------- | -------- | -------- | ---------- |
+//! let result: Duration = time - time;     // | Time       | -        | Time     | Duration   |
+//! time += Time::hours(3);                 // | Time       | +=       | Time     | Time       |
+//!
+//! // | Time       | +        | Duration | Time       |
+//! assert_eq!(Duration::hours(5), Time::hours(10) - Time::hours(5));
+//! let mut t = Time::hours(5);
+//! t+= Time::hours(4);
+//! assert_eq!(Time::hours(9), t);
+//! // | Time       | +=       | Duration | Time       |
+//! // | Time       | -        | Duration | Time       |
+//! // | Time       | -=       | Duration | Time       |
+//! // | TimeWindow | +        | Duration | TimeWindow |
+//! // | TimeWindow | +=       | Duration | TimeWindow |
+//! // | TimeWindow | -        | Duration | TimeWindow |
+//! // | TimeWindow | -=       | Duration | TimeWindow |
+//! // | Duration   | +        | Duration | Duration   |
+//! // | Duration   | +=       | Duration | Duration   |
+//! // | Duration   | -        | Duration | Duration   |
+//! // | Duration   | -=       | Duration | Duration   |
+//! // | Duration   | *        | f64      | Duration   |
+//! // | Duration   | *=       | f64      | Duration   |
+//! // | Duration   | /        | f64      | Duration   |
+//! // | Duration   | /=       | f64      | Duration   |
+//! // | Duration   | *        | isize    | Duration   |
+//! // | Duration   | *=       | isize    | Duration   |
+//! // | Duration   | /        | isize    | Duration   |
+//! // | Duration   | /=       | isize    | Duration   |
+//! // | Duration   | *        | Duration | Duration   |
+//! // | Duration   | *=       | Duration | Duration   |
+//! // | Duration   | /        | Duration | Duration   |
+//! // | Duration   | /=       | Duration | Duration   |
+//!```
 use core::fmt;
 use std::cmp::max;
 use std::cmp::Ordering;
@@ -465,6 +506,20 @@ impl TimeWindow {
         self.start < that.end && that.start < self.end
     }
 }
+
+// impl AddAssign<Duration> for TimeWindow {
+//     fn add_assign(&mut self, rhs: Duration) {
+//         self.start += rhs;
+//         self.end += rhs;
+//     }
+// }
+
+// impl SubAssign<Duration> for TimeWindow {
+//     fn sub_assign(&mut self, rhs: Duration) {
+//         self.start -= rhs;
+//         self.end -= rhs;
+//     }
+// }
 
 /// A duration of time.
 ///
@@ -1352,5 +1407,12 @@ mod duration_test {
         let json = serde_json::to_string(&expected).unwrap();
         let actual: Duration = serde_json::from_str(json.as_str()).unwrap();
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn math() {
+        let mut duration = Duration::hours(1);
+
+        duration += duration;
     }
 }
