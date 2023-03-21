@@ -33,7 +33,10 @@ lint:
 		-D clippy::checked_conversions \
 		-D clippy::filter_map_next \
 		-D clippy::manual_instant_elapsed \
-		-D clippy::cast_lossless
+		-D clippy::cast_possible_wrap \
+		-D clippy::cast_lossless \
+		-D clippy::cast_possible_truncation \
+		-D clippy::cast_sign_loss
 	cargo doc \
 		--all \
 		--no-deps \
