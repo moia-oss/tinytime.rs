@@ -25,7 +25,15 @@ lint:
 		--benches \
 		-- \
 		-D clippy::style \
-		-D clippy::perf
+		-D clippy::perf \
+		-D clippy::todo \
+		-D clippy::doc_link_with_quotes \
+		-D clippy::doc_markdown \
+		-D clippy::cloned_instead_of_copied \
+		-D clippy::checked_conversions \
+		-D clippy::filter_map_next \
+		-D clippy::manual_instant_elapsed \
+		-D clippy::cast_lossless
 	cargo doc \
 		--all \
 		--no-deps \
