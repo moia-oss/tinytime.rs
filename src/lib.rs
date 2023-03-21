@@ -8,7 +8,6 @@ use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Debug;
 use std::fmt::Display;
-use std::iter::Sum;
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Div;
