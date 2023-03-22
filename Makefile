@@ -24,8 +24,11 @@ lint:
 		--tests \
 		--benches \
 		-- \
-		-D clippy::style \
+		-D clippy::complexity \
+		-D clippy::correctness \
 		-D clippy::perf \
+		-D clippy::style \
+		-D clippy::suspicious \
 		-D clippy::todo \
 		-D clippy::doc_link_with_quotes \
 		-D clippy::doc_markdown \
@@ -33,7 +36,25 @@ lint:
 		-D clippy::checked_conversions \
 		-D clippy::filter_map_next \
 		-D clippy::manual_instant_elapsed \
-		-D clippy::cast_lossless
+		-D clippy::cast_possible_wrap \
+		-D clippy::cast_lossless \
+		-D clippy::cast_possible_truncation \
+		-D clippy::cast_sign_loss \
+		-D clippy::dbg_macro \
+		-D clippy::expect_used \
+		-D clippy::format_push_string \
+		-D clippy::get_unwrap \
+		-D clippy::if_then_some_else_none \
+		-D clippy::panic \
+		-D clippy::panic_in_result_fn \
+		-D clippy::print_stderr \
+		-D clippy::print_stdout \
+		-D clippy::try_err \
+		-D clippy::unimplemented \
+		-D clippy::unnecessary_self_imports \
+		-D clippy::unneeded_field_pattern \
+		-D clippy::unreachable \
+		-D clippy::use_debug
 	cargo doc \
 		--all \
 		--no-deps \

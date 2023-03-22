@@ -34,33 +34,32 @@ use serde::Serialize;
 
 /// A point in time.
 ///
-/// Low overhead time representation. Cannot be negative. Internally represented
-/// as milliseconds.
+/// Low overhead time representation. Internally represented as milliseconds.
 #[derive(
     Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Debug, Default, Serialize, Deref, From, Into,
 )]
-pub struct Time(usize);
+pub struct Time(i64);
 impl Time {
-    pub const MAX: Self = Self(usize::MAX);
-    pub const EPOCH: Self = Self(0_usize);
+    pub const MAX: Self = Self(i64::MAX);
+    pub const EPOCH: Self = Self(0);
 
     const SECOND: Time = Time(1000);
     const MINUTE: Time = Time(60 * Self::SECOND.0);
     const HOUR: Time = Time(60 * Self::MINUTE.0);
 
-    pub const fn millis(millis: usize) -> Self {
+    pub const fn millis(millis: i64) -> Self {
         Time(millis)
     }
 
-    pub const fn seconds(seconds: usize) -> Self {
+    pub const fn seconds(seconds: i64) -> Self {
         Time::millis(seconds * Self::SECOND.0)
     }
 
-    pub const fn minutes(minutes: usize) -> Self {
+    pub const fn minutes(minutes: i64) -> Self {
         Time::millis(minutes * Self::MINUTE.0)
     }
 
-    pub const fn hours(hours: usize) -> Self {
+    pub const fn hours(hours: i64) -> Self {
         Time::millis(hours * Self::HOUR.0)
     }
 
@@ -93,7 +92,16 @@ impl Time {
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
         let secs = self.0 / 1000;
         let nanos = (self.0 % 1000) * 1_000_000;
-        let t = NaiveDateTime::from_timestamp_opt(secs as i64, nanos as u32);
+        // casting to u32 is safe here because it is guaranteed that the value is in
+        // 0..1_000_000_000
+        #[allow(clippy::cast_possible_truncation)]
+        let nanos = if nanos.is_negative() {
+            1_000_000_000 - nanos.unsigned_abs()
+        } else {
+            nanos.unsigned_abs()
+        } as u32;
+
+        let t = NaiveDateTime::from_timestamp_opt(secs, nanos);
         match t {
             None => DelayedFormat::new(None, None, StrftimeItems::new("∞")),
             Some(v) => v.format(fmt),
@@ -116,7 +124,7 @@ impl Time {
     /// ```
     pub fn parse_from_rfc3339(s: &str) -> Result<Time, chrono::ParseError> {
         DateTime::parse_from_rfc3339(s)
-            .map(|chrono_datetime| Time::millis(chrono_datetime.timestamp_millis() as usize))
+            .map(|chrono_datetime| Time::millis(chrono_datetime.timestamp_millis()))
     }
 
     /// Returns the current time instance.
@@ -124,10 +132,10 @@ impl Time {
     /// Don't use this method to compare if the current time has passed a
     /// certain deadline.
     pub fn now() -> Time {
-        Time::millis(chrono::Local::now().timestamp_millis() as usize)
+        Time::millis(chrono::Local::now().timestamp_millis())
     }
 
-    pub fn as_millis(&self) -> usize {
+    pub fn as_millis(&self) -> i64 {
         self.0
     }
 
@@ -149,11 +157,11 @@ impl Time {
     /// ```
     pub fn round_down(&self, step_size: Duration) -> Time {
         let time_milli = self.as_millis();
-        let part = time_milli % step_size.as_millis_unsigned();
+        let part = time_milli % step_size.as_millis().abs();
         Time::millis(time_milli - part)
     }
 
-    /// Rounds time uo to a step size
+    /// Rounds time up to a step size
     ///
     /// # Examples
     ///
@@ -171,7 +179,7 @@ impl Time {
     /// ```
     pub fn round_up(&self, step_size: Duration) -> Time {
         let time_milli = self.as_millis();
-        let step_milli = step_size.as_millis_unsigned();
+        let step_milli = step_size.as_millis().abs();
         let part = time_milli % step_milli;
         let remaining = (step_milli - part) % step_milli;
         Time::millis(time_milli + remaining)
@@ -204,8 +212,7 @@ impl Time {
     }
 
     pub fn since_epoch(&self) -> Duration {
-        debug_assert!(isize::try_from(self.0).is_ok());
-        Duration::millis(self.as_millis() as isize)
+        Duration::millis(self.as_millis())
     }
 }
 
@@ -238,7 +245,7 @@ impl<'de> Visitor<'de> for TimeVisitor {
     where
         E: serde::de::Error,
     {
-        usize::try_from(v)
+        i64::try_from(v)
             .map_err(|e| E::custom(e.to_string()))
             .map(Time::millis)
     }
@@ -255,7 +262,14 @@ impl<'de> Visitor<'de> for TimeVisitor {
 
 impl From<Time> for std::time::SystemTime {
     fn from(input: Time) -> Self {
-        std::time::UNIX_EPOCH + std::time::Duration::from_millis(input.0 as u64)
+        debug_assert!(
+            input.0 >= 0,
+            "cannot convert a negative Time instance {input:?} to std::time::SystemTime"
+        );
+        #[allow(clippy::cast_sign_loss)] // the debug_assert above should catch this case
+        {
+            std::time::UNIX_EPOCH + std::time::Duration::from_millis(input.0 as u64)
+        }
     }
 }
 
@@ -269,10 +283,6 @@ pub struct TimeWindow {
 impl TimeWindow {
     pub fn new(start: Time, end: Time) -> Self {
         debug_assert!(start <= end);
-        debug_assert!(
-            end.0 - start.0 <= Duration::MAX.0 as usize,
-            "The difference between time window start {start:?} and end {end:?} is bigger than Duration::MAX"
-        );
         TimeWindow { start, end }
     }
 
@@ -281,11 +291,11 @@ impl TimeWindow {
         Self::new(Time::EPOCH, end)
     }
 
-    pub fn from_minutes(a: usize, b: usize) -> Self {
+    pub fn from_minutes(a: i64, b: i64) -> Self {
         TimeWindow::new(Time::minutes(a), Time::minutes(b))
     }
 
-    pub fn from_seconds(a: usize, b: usize) -> Self {
+    pub fn from_seconds(a: i64, b: i64) -> Self {
         TimeWindow::new(Time::seconds(a), Time::seconds(b))
     }
 
@@ -321,7 +331,7 @@ impl TimeWindow {
         }
     }
 
-    pub fn instant_seconds(seconds: usize) -> Self {
+    pub fn instant_seconds(seconds: i64) -> Self {
         TimeWindow::from_seconds(seconds, seconds)
     }
 
@@ -363,13 +373,11 @@ impl TimeWindow {
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
     pub fn extend_end(&mut self, new_end: Time) -> Option<Duration> {
-        if new_end > self.end {
+        (new_end > self.end).then(|| {
             let diff = new_end - self.end;
             self.set_end(new_end);
-            Some(diff)
-        } else {
-            None
-        }
+            diff
+        })
     }
 
     /// Extends time window end by the given duration.
@@ -487,33 +495,33 @@ impl TimeWindow {
     Sum,
     Neg,
 )]
-pub struct Duration(isize);
+pub struct Duration(i64);
 
 impl Duration {
-    pub const ZERO: Self = Self(0_isize);
-    pub const MAX: Self = Self(isize::MAX);
+    pub const ZERO: Self = Self(0_i64);
+    pub const MAX: Self = Self(i64::MAX);
 
     const SECOND: Duration = Duration(1000);
     const MINUTE: Duration = Duration(60 * Self::SECOND.0);
     const HOUR: Duration = Duration(60 * Self::MINUTE.0);
 
     /// Create a duration instance from hours
-    pub const fn hours(hours: isize) -> Self {
+    pub const fn hours(hours: i64) -> Self {
         Duration(hours * Self::HOUR.0)
     }
 
     /// Create a duration instance from minutes.
-    pub const fn minutes(minutes: isize) -> Self {
+    pub const fn minutes(minutes: i64) -> Self {
         Duration(minutes * Self::MINUTE.0)
     }
 
     /// Create a duration instance from seconds.
-    pub const fn seconds(seconds: isize) -> Self {
+    pub const fn seconds(seconds: i64) -> Self {
         Duration(seconds * Self::SECOND.0)
     }
 
     /// Create a duration instance from ms.
-    pub const fn millis(ms: isize) -> Self {
+    pub const fn millis(ms: i64) -> Self {
         Duration(ms)
     }
 
@@ -525,29 +533,35 @@ impl Duration {
         }
     }
     /// Returns the number of whole milliseconds in the Duration instance.
-    pub fn as_millis(&self) -> isize {
+    pub fn as_millis(&self) -> i64 {
         self.0
     }
 
     /// Returns the number of non-negative whole milliseconds in the Duration
     /// instance.
-    pub fn as_millis_unsigned(&self) -> usize {
-        max(self.0, 0) as usize
+    pub fn as_millis_unsigned(&self) -> u64 {
+        #[allow(clippy::cast_sign_loss)]
+        {
+            max(self.0, 0) as u64
+        }
     }
 
     /// Returns the number of whole seconds in the Duration instance.
-    pub const fn as_seconds(&self) -> isize {
+    pub const fn as_seconds(&self) -> i64 {
         self.0 / Self::SECOND.0
     }
 
     /// Returns the number of non-negative whole seconds in the Duration
     /// instance.
-    pub fn as_seconds_unsigned(&self) -> usize {
-        max(0, self.0 / 1000) as usize
+    pub fn as_seconds_unsigned(&self) -> u64 {
+        #[allow(clippy::cast_sign_loss)]
+        {
+            max(0, self.0 / 1000) as u64
+        }
     }
 
     /// Returns the number of whole minutes in the Duration instance.
-    pub const fn as_minutes(&self) -> isize {
+    pub const fn as_minutes(&self) -> i64 {
         self.0 / Self::MINUTE.0
     }
 
@@ -574,13 +588,13 @@ impl<'de> Deserialize<'de> for Duration {
 
 impl PartialEq<std::time::Duration> for Duration {
     fn eq(&self, other: &std::time::Duration) -> bool {
-        (self.as_millis_unsigned() as u128).eq(&other.as_millis())
+        (u128::from(self.as_millis_unsigned())).eq(&other.as_millis())
     }
 }
 
 impl PartialOrd<std::time::Duration> for Duration {
     fn partial_cmp(&self, other: &std::time::Duration) -> Option<Ordering> {
-        (self.as_millis_unsigned() as u128).partial_cmp(&other.as_millis())
+        (u128::from(self.as_millis_unsigned())).partial_cmp(&other.as_millis())
     }
 }
 
@@ -605,7 +619,7 @@ impl<'de> Visitor<'de> for DurationVisitor {
     where
         E: serde::de::Error,
     {
-        isize::try_from(v)
+        i64::try_from(v)
             .map_err(|e| E::custom(e.to_string()))
             .map(Duration::millis)
     }
@@ -614,9 +628,7 @@ impl<'de> Visitor<'de> for DurationVisitor {
     where
         E: serde::de::Error,
     {
-        isize::try_from(v)
-            .map_err(|e| E::custom(e.to_string()))
-            .map(Duration::millis)
+        Ok(Duration::millis(v))
     }
 
     fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
@@ -667,7 +679,10 @@ impl Display for Duration {
 
 impl From<f64> for Duration {
     fn from(num: f64) -> Self {
-        Duration::millis(num as isize)
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            Duration::millis(num.round() as i64)
+        }
     }
 }
 
@@ -675,7 +690,7 @@ impl TryFrom<Duration> for Time {
     type Error = &'static str;
     fn try_from(duration: Duration) -> Result<Self, Self::Error> {
         if duration.is_non_negative() {
-            Ok(Time::millis(duration.as_millis() as usize))
+            Ok(Time::millis(duration.as_millis()))
         } else {
             Err("Duration cannot be negative.")
         }
@@ -700,19 +715,11 @@ impl AddAssign<Time> for Time {
 
 impl AddAssign<Duration> for Time {
     fn add_assign(&mut self, rhs: Duration) {
-        if rhs.is_negative() {
-            debug_assert!(
-                self.0.checked_sub(rhs.0.unsigned_abs()).is_some(),
-                "overflow detected: {self:?} + {rhs:?}"
-            );
-            self.0 -= rhs.0.unsigned_abs();
-        } else {
-            debug_assert!(
-                self.0.checked_add(rhs.0.unsigned_abs()).is_some(),
-                "overflow detected: {self:?} + {rhs:?}"
-            );
-            self.0 += rhs.0.unsigned_abs();
-        }
+        debug_assert!(
+            self.0.checked_add(rhs.0).is_some(),
+            "overflow detected: {self:?} += {rhs:?}"
+        );
+        self.0 += rhs.0;
     }
 }
 
@@ -720,19 +727,11 @@ impl Add<Duration> for Time {
     type Output = Time;
 
     fn add(self, rhs: Duration) -> Self::Output {
-        if rhs.is_negative() {
-            debug_assert!(
-                self.0.checked_sub(rhs.0.unsigned_abs()).is_some(),
-                "overflow detected: {self:?} + {rhs:?}"
-            );
-            Time(self.0 - rhs.0.unsigned_abs())
-        } else {
-            debug_assert!(
-                self.0.checked_add(rhs.0.unsigned_abs()).is_some(),
-                "overflow detected: {self:?} + {rhs:?}"
-            );
-            Time(self.0 + rhs.0.unsigned_abs())
-        }
+        debug_assert!(
+            self.0.checked_add(rhs.0).is_some(),
+            "overflow detected: {self:?} + {rhs:?}"
+        );
+        Time(self.0 + rhs.0)
     }
 }
 
@@ -740,37 +739,21 @@ impl Sub<Duration> for Time {
     type Output = Time;
 
     fn sub(self, rhs: Duration) -> Self::Output {
-        if rhs.is_negative() {
-            debug_assert!(
-                self.0.checked_add(rhs.0.unsigned_abs()).is_some(),
-                "overflow detected: {self:?} + {rhs:?}"
-            );
-            Time(self.0 + rhs.0.unsigned_abs())
-        } else {
-            debug_assert!(
-                self.0.checked_sub(rhs.0.unsigned_abs()).is_some(),
-                "overflow detected: {self:?} + {rhs:?}"
-            );
-            Time(self.0 - rhs.0.unsigned_abs())
-        }
+        debug_assert!(
+            self.0.checked_sub(rhs.0).is_some(),
+            "overflow detected: {self:?} - {rhs:?}"
+        );
+        Time(self.0 - rhs.0)
     }
 }
 
 impl SubAssign<Duration> for Time {
     fn sub_assign(&mut self, rhs: Duration) {
-        if rhs.is_negative() {
-            debug_assert!(
-                self.0.checked_add(rhs.0.unsigned_abs()).is_some(),
-                "overflow detected: {self:?} + {rhs:?}"
-            );
-            self.0 += rhs.0.unsigned_abs();
-        } else {
-            debug_assert!(
-                self.0.checked_sub(rhs.0.unsigned_abs()).is_some(),
-                "overflow detected: {self:?} + {rhs:?}"
-            );
-            self.0 -= rhs.0.unsigned_abs()
-        }
+        debug_assert!(
+            self.0.checked_sub(rhs.0).is_some(),
+            "overflow detected: {self:?} -= {rhs:?}"
+        );
+        self.0 -= rhs.0
     }
 }
 
@@ -778,19 +761,11 @@ impl Sub<Time> for Time {
     type Output = Duration;
 
     fn sub(self, rhs: Time) -> Self::Output {
-        if self > rhs {
-            debug_assert!(
-                isize::try_from(self.0 - rhs.0).is_ok(),
-                "Overflow detected, Time instances are too far apart: {self:?} - {rhs:?}"
-            );
-            Duration((self.0 - rhs.0) as isize)
-        } else {
-            debug_assert!(
-                isize::try_from(rhs.0 - self.0).is_ok(),
-                "Overflow detected, Time instances are too far apart: {self:?} - {rhs:?}"
-            );
-            Duration(-((rhs.0 - self.0) as isize))
-        }
+        debug_assert!(
+            self.0.checked_sub(rhs.0).is_some(),
+            "overflow detected: {self:?} - {rhs:?}"
+        );
+        Duration(self.0 - rhs.0)
     }
 }
 
@@ -838,10 +813,10 @@ impl Sub<Duration> for Duration {
     }
 }
 
-impl Mul<isize> for Duration {
+impl Mul<i64> for Duration {
     type Output = Duration;
 
-    fn mul(self, rhs: isize) -> Self::Output {
+    fn mul(self, rhs: i64) -> Self::Output {
         debug_assert!(
             self.0.checked_mul(rhs).is_some(),
             "overflow detected: {self:?} * {rhs:?}"
@@ -850,8 +825,8 @@ impl Mul<isize> for Duration {
     }
 }
 
-impl MulAssign<isize> for Duration {
-    fn mul_assign(&mut self, rhs: isize) {
+impl MulAssign<i64> for Duration {
+    fn mul_assign(&mut self, rhs: i64) {
         debug_assert!(
             self.0.checked_mul(rhs).is_some(),
             "overflow detected: {self:?} *= {rhs:?}"
@@ -860,7 +835,7 @@ impl MulAssign<isize> for Duration {
     }
 }
 
-impl Mul<Duration> for isize {
+impl Mul<Duration> for i64 {
     type Output = Duration;
 
     fn mul(self, rhs: Duration) -> Self::Output {
@@ -876,7 +851,10 @@ impl Mul<f64> for Duration {
     type Output = Duration;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        Duration((self.0 as f64 * rhs).round() as isize)
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            Duration((self.0 as f64 * rhs).round() as i64)
+        }
     }
 }
 
@@ -897,7 +875,10 @@ impl Div<f64> for Duration {
             rhs, 0.0,
             "Dividing by zero results in INF. This is probably not what you want."
         );
-        Duration((self.0 as f64 / rhs).round() as isize)
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            Duration((self.0 as f64 / rhs).round() as i64)
+        }
     }
 }
 
@@ -916,14 +897,27 @@ impl Div<Duration> for Duration {
 
 impl From<Duration> for std::time::Duration {
     fn from(input: Duration) -> Self {
-        let secs = input.0 / 1000;
-        let nanos = (input.0 % 1000) * 1_000_000;
-        std::time::Duration::new(secs as u64, nanos as u32)
+        debug_assert!(
+            input.is_non_negative(),
+            "Negative Duration {input} cannot be converted to std::time::Duration"
+        );
+        #[allow(clippy::cast_sign_loss)] // caught by the debug_assert above
+        let secs = (input.0 / 1000) as u64;
+        // casting to u32 is safe here because it is guaranteed that the value is in
+        // 0..1_000_000_000. The sign loss is caught by the debug_assert above.
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+        let nanos = ((input.0 % 1000) * 1_000_000) as u32;
+        std::time::Duration::new(secs, nanos)
     }
 }
 impl From<std::time::Duration> for Duration {
     fn from(input: std::time::Duration) -> Self {
-        Duration::millis(input.as_millis() as isize)
+        debug_assert!(
+            i64::try_from(input.as_millis()).is_ok(),
+            "Input std::time::Duration ({input:?}) is too large to be converted to tinytime::Duration"
+        );
+        #[allow(clippy::cast_possible_truncation)]
+        Duration::millis(input.as_millis() as i64)
     }
 }
 
@@ -963,16 +957,16 @@ impl FromStr for Duration {
             .ok_or(DurationParseError::UnrecognizedFormat)?;
         let mut duration = Duration::ZERO;
         if let Some(h) = captures.name("h") {
-            duration += Duration::hours(h.as_str().parse::<isize>().unwrap());
+            duration += Duration::hours(h.as_str().parse::<i64>().unwrap());
         }
         if let Some(m) = captures.name("m") {
-            duration += Duration::minutes(m.as_str().parse::<isize>().unwrap());
+            duration += Duration::minutes(m.as_str().parse::<i64>().unwrap());
         }
         if let Some(s) = captures.name("s") {
-            duration += Duration::seconds(s.as_str().parse::<isize>().unwrap());
+            duration += Duration::seconds(s.as_str().parse::<i64>().unwrap());
         }
         if let Some(ms) = captures.name("ms") {
-            duration += Duration::millis(ms.as_str().parse::<isize>().unwrap());
+            duration += Duration::millis(ms.as_str().parse::<i64>().unwrap());
         }
         if captures.name("sign").is_some() {
             duration *= -1;
@@ -1020,23 +1014,38 @@ mod time_test {
                 expected: "1970-01-01T00:00:00+00:00".to_string(),
             },
             TestCase {
+                name: "i16::MAX + 1",
+                input: Time::seconds(i64::from(i16::MAX) + 1),
+                expected: "1970-01-01T09:06:08+00:00".to_string(),
+            },
+            TestCase {
                 name: "i32::MAX + 1",
-                input: Time::seconds(i32::MAX as usize + 1),
+                input: Time::seconds(i64::from(i32::MAX) + 1),
                 expected: "2038-01-19T03:14:08+00:00".to_string(),
             },
             TestCase {
                 name: "u32::MAX + 1",
-                input: Time::seconds(u32::MAX as usize + 1),
+                input: Time::seconds(i64::from(u32::MAX) + 1),
                 expected: "2106-02-07T06:28:16+00:00".to_string(),
             },
             TestCase {
                 name: "very large",
-                input: Time::seconds(i32::MAX as usize * 3500),
+                input: Time::seconds(i64::from(i32::MAX) * 3500),
                 expected: "+240148-08-31T19:28:20+00:00".to_string(),
             },
             TestCase {
                 name: "MAX",
                 input: Time::MAX,
+                expected: "∞".to_string(),
+            },
+            TestCase {
+                name: "i16::MIN",
+                input: Time::seconds(i64::from(i16::MIN)),
+                expected: "1969-12-31T14:53:52+00:00".to_string(),
+            },
+            TestCase {
+                name: "i64::MIN",
+                input: Time::millis(i64::MIN),
                 expected: "∞".to_string(),
             },
         ];
@@ -1147,7 +1156,7 @@ mod duration_test {
     fn test_duration_is_non_negative_returns_correctly() {
         struct TestCase {
             name: &'static str,
-            input: isize,
+            input: i64,
             expected: bool,
         }
 
@@ -1211,7 +1220,7 @@ mod duration_test {
     fn test_duration_is_positive_returns_correctly() {
         struct TestCase {
             name: &'static str,
-            input: isize,
+            input: i64,
             expected: bool,
         }
 
@@ -1241,63 +1250,35 @@ mod duration_test {
 
     #[test]
     fn time_add_duration() {
-        let mut small_time = Time::millis(1);
+        let mut time = Time::millis(1);
         let expected_time = Time::millis(3);
         let duration = Duration::millis(2);
-        // small time: add
-        assert_eq!(expected_time, small_time + duration);
-        // small time: add assign
-        small_time += duration;
-        assert_eq!(expected_time, small_time);
-
-        let mut big_time = Time::hours(2_600_000_000_000);
-        assert!(big_time > Time::EPOCH + Duration::MAX);
-        // big time: add
-        assert_eq!(
-            Time::hours(2_600_000_000_010),
-            big_time + Duration::hours(10)
-        );
-        // big time: add assign
-        big_time += Duration::hours(10);
-        assert_eq!(Time::hours(2_600_000_000_010), big_time);
+        //  add
+        assert_eq!(expected_time, time + duration);
+        // add assign
+        time += duration;
+        assert_eq!(expected_time, time);
     }
 
     #[test]
     fn time_sub_duration() {
-        let mut small_time = Time::millis(10);
+        let mut time = Time::millis(10);
         let expected_time = Time::millis(3);
         let duration = Duration::millis(7);
         // small time: sub
-        assert_eq!(expected_time, small_time - duration);
+        assert_eq!(expected_time, time - duration);
         // small time: sub assign
-        small_time -= duration;
-        assert_eq!(expected_time, small_time);
-
-        let mut big_time = Time::hours(2_600_000_000_010);
-        assert!(big_time > Time::EPOCH + Duration::MAX);
-        // big time: sub
-        assert_eq!(
-            Time::hours(2_600_000_000_002),
-            big_time - Duration::hours(8)
-        );
-        // big time: sub assign
-        big_time -= Duration::hours(8);
-        assert_eq!(Time::hours(2_600_000_000_002), big_time);
+        time -= duration;
+        assert_eq!(expected_time, time);
     }
 
     #[test]
     fn time_sub_time() {
         // small numbers
-        let small_time = Time::minutes(7);
-        let small_time2 = Time::minutes(3);
-        assert_eq!(Duration::minutes(4), small_time - small_time2);
-        assert_eq!(Duration::minutes(-4), small_time2 - small_time);
-
-        // big numbers
-        let big_time = Time::hours(2_600_000_000_000);
-        let big_time2 = Time::hours(2_600_000_000_012);
-        assert_eq!(Duration::hours(-12), big_time - big_time2);
-        assert_eq!(Duration::hours(12), big_time2 - big_time);
+        let time = Time::minutes(7);
+        let time2 = Time::minutes(3);
+        assert_eq!(Duration::minutes(4), time - time2);
+        assert_eq!(Duration::minutes(-4), time2 - time);
     }
 
     #[test]
