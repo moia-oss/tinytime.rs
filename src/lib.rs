@@ -9,37 +9,41 @@
 //! ```no_run
 //! # use tinytime::Duration;
 //! # use tinytime::Time;
+//! # use tinytime::TimeWindow;
 //! # let mut time = Time::hours(3);
-//! # let duration = Duration::minutes(4);
-//! # let time_window = TimeWindow::new(Time::hours(2), Time::hours(3));
+//! # let mut duration = Duration::minutes(4);
+//! # let mut time_window = TimeWindow::new(Time::hours(2), Time::hours(3));
 //! // | example                                       | left       | op | right    | result     |
 //! // | ----------------------------------------------| ---------- | ---| -------- | ---------- |
-//! let result: Duration = time - time;             // | Time       | -  | Time     | Duration   |
+//! let result: Time = time + time;                 // | Time       | +  | Time     | Time       |
 //! time += Time::hours(3);                         // | Time       | += | Time     | Time       |
+//! let result: Duration = time - time;             // | Time       | -  | Time     | Duration   |
 //! let result: Time = time + duration;             // | Time       | +  | Duration | Time       |
 //! time += duration;                               // | Time       | += | Duration | Time       |
 //! let result: Time = time - duration;             // | Time       | -  | Duration | Time       |
 //! time -= duration;                               // | Time       | -= | Duration | Time       |
-//! let result: TimeWindow = time_window + duration;// | TimeWindow | +  | Duration | TimeWindow |
-//! time_window += duration;                        // | TimeWindow | += | Duration | TimeWindow |
-//! let result: TimeWindow = time_window - duration;// | TimeWindow | -  | Duration | TimeWindow |
-//! time_window -= duration;                        // | TimeWindow | -= | Duration | TimeWindow |
 //! let result: Duration = duration + duration;     // | Duration   | +  | Duration | Duration   |
 //! duration += duration;                           // | Duration   | += | Duration | Duration   |
 //! let result: Duration = duration - duration;     // | Duration   | -  | Duration | Duration   |
 //! duration -= duration;                           // | Duration   | -= | Duration | Duration   |
 //! let result: Duration = duration * 1.0f64;       // | Duration   | *  | f64      | Duration   |
+//! let result: Duration = 2.0f64 * duration;       // | f64        | *  | Duration | Duration   |
 //! duration *= 2.0f64;                             // | Duration   | *= | f64      | Duration   |
 //! let result: Duration = duration / 2.0f64;       // | Duration   | /  | f64      | Duration   |
 //! duration /= 2.0f64;                             // | Duration   | /= | f64      | Duration   |
-//! let result: Duration = duration * 7isize;       // | Duration   | *  | isize    | Duration   |
-//! duration *= 7isize;                             // | Duration   | *= | isize    | Duration   |
-//! let result: Duration = duration / 7isize;       // | Duration   | /  | isize    | Duration   |
-//! duration /= 7isize;                             // | Duration   | /= | isize    | Duration   |
+//! let result: Duration = duration * 7i64;         // | Duration   | *  | i64      | Duration   |
+//! let result: Duration = 7i64 * duration;         // | i64        | *  | Duration | Duration   |
+//! duration *= 7i64;                               // | Duration   | *= | i64      | Duration   |
+//! let result: Duration = duration / 7i64;         // | Duration   | /  | i64      | Duration   |
+//! duration /= 7i64;                               // | Duration   | /= | i64      | Duration   |
 //! let result: Duration = duration * duration;     // | Duration   | *  | Duration | Duration   |
 //! duration *= duration;                           // | Duration   | *= | Duration | Duration   |
-//! let result: Duration = duration / duration;     // | Duration   | /  | Duration | Duration   |
-//! duration /= duration;                           // | Duration   | /= | Duration | Duration   |
+//! let result: f64 = duration / duration;          // | Duration   | /  | Duration | f64        |
+//! let result: TimeWindow = time_window + duration;// | TimeWindow | +  | Duration | TimeWindow |
+//! time_window += duration;                        // | TimeWindow | += | Duration | TimeWindow |
+//! let result: TimeWindow = time_window - duration;// | TimeWindow | -  | Duration | TimeWindow |
+//! time_window -= duration;                        // | TimeWindow | -= | Duration | TimeWindow |
+
 //!```
 use core::fmt;
 use std::cmp::max;
@@ -50,6 +54,7 @@ use std::fmt::Display;
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Div;
+use std::ops::DivAssign;
 use std::ops::Mul;
 use std::ops::MulAssign;
 use std::ops::Sub;
@@ -756,6 +761,22 @@ impl From<Duration> for f64 {
     }
 }
 
+/////////////////////////////
+// OPERATORS FOR TIME      //
+/////////////////////////////
+
+impl Add<Time> for Time {
+    type Output = Time;
+
+    fn add(self, rhs: Time) -> Self::Output {
+        debug_assert!(
+            self.0.checked_add(rhs.0).is_some(),
+            "overflow detected: {self:?} + {rhs:?}"
+        );
+        Time(self.0 + rhs.0)
+    }
+}
+
 impl AddAssign<Time> for Time {
     fn add_assign(&mut self, rhs: Time) {
         debug_assert!(
@@ -766,13 +787,15 @@ impl AddAssign<Time> for Time {
     }
 }
 
-impl AddAssign<Duration> for Time {
-    fn add_assign(&mut self, rhs: Duration) {
+impl Sub<Time> for Time {
+    type Output = Duration;
+
+    fn sub(self, rhs: Time) -> Self::Output {
         debug_assert!(
-            self.0.checked_add(rhs.0).is_some(),
-            "overflow detected: {self:?} += {rhs:?}"
+            self.0.checked_sub(rhs.0).is_some(),
+            "overflow detected: {self:?} - {rhs:?}"
         );
-        self.0 += rhs.0;
+        Duration(self.0 - rhs.0)
     }
 }
 
@@ -785,6 +808,16 @@ impl Add<Duration> for Time {
             "overflow detected: {self:?} + {rhs:?}"
         );
         Time(self.0 + rhs.0)
+    }
+}
+
+impl AddAssign<Duration> for Time {
+    fn add_assign(&mut self, rhs: Duration) {
+        debug_assert!(
+            self.0.checked_add(rhs.0).is_some(),
+            "overflow detected: {self:?} += {rhs:?}"
+        );
+        self.0 += rhs.0;
     }
 }
 
@@ -810,27 +843,9 @@ impl SubAssign<Duration> for Time {
     }
 }
 
-impl Sub<Time> for Time {
-    type Output = Duration;
-
-    fn sub(self, rhs: Time) -> Self::Output {
-        debug_assert!(
-            self.0.checked_sub(rhs.0).is_some(),
-            "overflow detected: {self:?} - {rhs:?}"
-        );
-        Duration(self.0 - rhs.0)
-    }
-}
-
-impl AddAssign<Duration> for Duration {
-    fn add_assign(&mut self, rhs: Duration) {
-        debug_assert!(
-            self.0.checked_add(rhs.0).is_some(),
-            "overflow detected: {self:?} += {rhs:?}"
-        );
-        self.0 += rhs.0;
-    }
-}
+/////////////////////////////
+// OPERATORS FOR DURATION  //
+/////////////////////////////
 
 impl Add<Duration> for Duration {
     type Output = Duration;
@@ -844,13 +859,13 @@ impl Add<Duration> for Duration {
     }
 }
 
-impl SubAssign<Duration> for Duration {
-    fn sub_assign(&mut self, rhs: Duration) {
+impl AddAssign<Duration> for Duration {
+    fn add_assign(&mut self, rhs: Duration) {
         debug_assert!(
-            self.0.checked_sub(rhs.0).is_some(),
-            "overflow detected: {self:?} -= {rhs:?}"
+            self.0.checked_add(rhs.0).is_some(),
+            "overflow detected: {self:?} += {rhs:?}"
         );
-        self.0 -= rhs.0;
+        self.0 += rhs.0;
     }
 }
 
@@ -866,37 +881,13 @@ impl Sub<Duration> for Duration {
     }
 }
 
-impl Mul<i64> for Duration {
-    type Output = Duration;
-
-    fn mul(self, rhs: i64) -> Self::Output {
+impl SubAssign<Duration> for Duration {
+    fn sub_assign(&mut self, rhs: Duration) {
         debug_assert!(
-            self.0.checked_mul(rhs).is_some(),
-            "overflow detected: {self:?} * {rhs:?}"
+            self.0.checked_sub(rhs.0).is_some(),
+            "overflow detected: {self:?} -= {rhs:?}"
         );
-        Duration(self.0 * rhs)
-    }
-}
-
-impl MulAssign<i64> for Duration {
-    fn mul_assign(&mut self, rhs: i64) {
-        debug_assert!(
-            self.0.checked_mul(rhs).is_some(),
-            "overflow detected: {self:?} *= {rhs:?}"
-        );
-        self.0 *= rhs
-    }
-}
-
-impl Mul<Duration> for i64 {
-    type Output = Duration;
-
-    fn mul(self, rhs: Duration) -> Self::Output {
-        debug_assert!(
-            self.checked_mul(rhs.0).is_some(),
-            "overflow detected: {self:?} * {rhs:?}"
-        );
-        Duration(self * rhs.0)
+        self.0 -= rhs.0;
     }
 }
 
@@ -919,6 +910,12 @@ impl Mul<Duration> for f64 {
     }
 }
 
+impl MulAssign<f64> for Duration {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.0 = (self.0 as f64 * rhs).round() as i64;
+    }
+}
+
 // Returns rounded Duration
 impl Div<f64> for Duration {
     type Output = Duration;
@@ -935,6 +932,80 @@ impl Div<f64> for Duration {
     }
 }
 
+impl DivAssign<f64> for Duration {
+    fn div_assign(&mut self, rhs: f64) {
+        self.0 = (self.0 as f64 / rhs).round() as i64;
+    }
+}
+
+impl Mul<i64> for Duration {
+    type Output = Duration;
+
+    fn mul(self, rhs: i64) -> Self::Output {
+        debug_assert!(
+            self.0.checked_mul(rhs).is_some(),
+            "overflow detected: {self:?} * {rhs:?}"
+        );
+        Duration(self.0 * rhs)
+    }
+}
+
+impl Mul<Duration> for i64 {
+    type Output = Duration;
+
+    fn mul(self, rhs: Duration) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl MulAssign<i64> for Duration {
+    fn mul_assign(&mut self, rhs: i64) {
+        debug_assert!(
+            self.0.checked_mul(rhs).is_some(),
+            "overflow detected: {self:?} *= {rhs:?}"
+        );
+        self.0 *= rhs
+    }
+}
+
+impl Div<i64> for Duration {
+    type Output = Duration;
+
+    fn div(self, rhs: i64) -> Self::Output {
+        // forward to the float implementation
+        self / rhs as f64
+    }
+}
+
+impl DivAssign<i64> for Duration {
+    fn div_assign(&mut self, rhs: i64) {
+        // forward to the float implementation
+        self.div_assign(rhs as f64)
+    }
+}
+
+impl Mul for Duration {
+    type Output = Duration;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        debug_assert!(
+            self.0.checked_mul(rhs.0).is_some(),
+            "overflow detected: {self:?} * {rhs:?}"
+        );
+        Duration(self.0 * rhs.0)
+    }
+}
+
+impl MulAssign for Duration {
+    fn mul_assign(&mut self, rhs: Self) {
+        debug_assert!(
+            self.0.checked_mul(rhs.0).is_some(),
+            "overflow detected: {self:?} *= {rhs:?}"
+        );
+        self.0 *= rhs.0;
+    }
+}
+
 impl Div<Duration> for Duration {
     type Output = f64;
 
@@ -945,6 +1016,40 @@ impl Div<Duration> for Duration {
             "Dividing by zero results in INF. This is probably not what you want."
         );
         self.0 as f64 / rhs.0 as f64
+    }
+}
+
+///////////////////////////////
+// OPERATORS FOR TIME WINDOW //
+///////////////////////////////
+
+impl Add<Duration> for TimeWindow {
+    type Output = TimeWindow;
+
+    fn add(self, rhs: Duration) -> Self::Output {
+        TimeWindow::new(self.start + rhs, self.end + rhs)
+    }
+}
+
+impl AddAssign<Duration> for TimeWindow {
+    fn add_assign(&mut self, rhs: Duration) {
+        self.start += rhs;
+        self.end += rhs;
+    }
+}
+
+impl Sub<Duration> for TimeWindow {
+    type Output = TimeWindow;
+
+    fn sub(self, rhs: Duration) -> Self::Output {
+        TimeWindow::new(self.start - rhs, self.end - rhs)
+    }
+}
+
+impl SubAssign<Duration> for TimeWindow {
+    fn sub_assign(&mut self, rhs: Duration) {
+        self.start -= rhs;
+        self.end -= rhs;
     }
 }
 
