@@ -35,12 +35,8 @@
 //! let result: Duration = duration / 7i64;         // | Duration   | /  | i64      | Duration   |
 //! duration /= 7i64;                               // | Duration   | /= | i64      | Duration   |
 //! let result: f64 = duration / duration;          // | Duration   | /  | Duration | f64        |
-//! let result: TimeWindow = time_window + duration;// | TimeWindow | +  | Duration | TimeWindow |
-//! time_window += duration;                        // | TimeWindow | += | Duration | TimeWindow |
-//! let result: TimeWindow = time_window - duration;// | TimeWindow | -  | Duration | TimeWindow |
-//! time_window -= duration;                        // | TimeWindow | -= | Duration | TimeWindow |
 
-//!```
+//! ```
 use core::fmt;
 use std::cmp::max;
 use std::cmp::Ordering;
@@ -512,21 +508,29 @@ impl TimeWindow {
     pub fn overlaps(&self, that: &TimeWindow) -> bool {
         self.start < that.end && that.start < self.end
     }
+
+    /// Shifts this time window by `duration` into the future. Affects both
+    /// `start` and `end` equally.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use tinytime::TimeWindow;
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
+    /// let mut tw = TimeWindow::new(Time::EPOCH, Time::minutes(15));
+    /// // shift to the future
+    /// tw.shift(Duration::minutes(30));
+    /// assert_eq!(TimeWindow::new(Time::minutes(30), Time::minutes(45)), tw);
+    /// // shift into the past
+    /// tw.shift(-Duration::minutes(15));
+    /// assert_eq!(TimeWindow::new(Time::minutes(15), Time::minutes(30)), tw);
+    /// ```
+    pub fn shift(&mut self, duration: Duration) {
+        self.start += duration;
+        self.end += duration;
+    }
 }
-
-// impl AddAssign<Duration> for TimeWindow {
-//     fn add_assign(&mut self, rhs: Duration) {
-//         self.start += rhs;
-//         self.end += rhs;
-//     }
-// }
-
-// impl SubAssign<Duration> for TimeWindow {
-//     fn sub_assign(&mut self, rhs: Duration) {
-//         self.start -= rhs;
-//         self.end -= rhs;
-//     }
-// }
 
 /// A duration of time.
 ///
@@ -968,40 +972,6 @@ impl Div<Duration> for Duration {
             "Dividing by zero results in INF. This is probably not what you want."
         );
         self.0 as f64 / rhs.0 as f64
-    }
-}
-
-///////////////////////////////
-// OPERATORS FOR TIME WINDOW //
-///////////////////////////////
-
-impl Add<Duration> for TimeWindow {
-    type Output = TimeWindow;
-
-    fn add(self, rhs: Duration) -> Self::Output {
-        TimeWindow::new(self.start + rhs, self.end + rhs)
-    }
-}
-
-impl AddAssign<Duration> for TimeWindow {
-    fn add_assign(&mut self, rhs: Duration) {
-        self.start += rhs;
-        self.end += rhs;
-    }
-}
-
-impl Sub<Duration> for TimeWindow {
-    type Output = TimeWindow;
-
-    fn sub(self, rhs: Duration) -> Self::Output {
-        TimeWindow::new(self.start - rhs, self.end - rhs)
-    }
-}
-
-impl SubAssign<Duration> for TimeWindow {
-    fn sub_assign(&mut self, rhs: Duration) {
-        self.start -= rhs;
-        self.end -= rhs;
     }
 }
 
