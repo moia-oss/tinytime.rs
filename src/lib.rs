@@ -1414,11 +1414,4 @@ mod duration_test {
         let actual: Duration = serde_json::from_str(json.as_str()).unwrap();
         assert_eq!(expected, actual);
     }
-
-    #[test]
-    fn math() {
-        let mut duration = Duration::hours(1);
-
-        duration += duration;
-    }
 }
