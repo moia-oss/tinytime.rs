@@ -15,8 +15,6 @@
 //! # let mut time_window = TimeWindow::new(Time::hours(2), Time::hours(3));
 //! // | example                                       | left       | op | right    | result     |
 //! // | ----------------------------------------------| ---------- | ---| -------- | ---------- |
-//! let result: Time = time + time;                 // | Time       | +  | Time     | Time       |
-//! time += Time::hours(3);                         // | Time       | += | Time     | Time       |
 //! let result: Duration = time - time;             // | Time       | -  | Time     | Duration   |
 //! let result: Time = time + duration;             // | Time       | +  | Duration | Time       |
 //! time += duration;                               // | Time       | += | Duration | Time       |
@@ -36,8 +34,6 @@
 //! duration *= 7i64;                               // | Duration   | *= | i64      | Duration   |
 //! let result: Duration = duration / 7i64;         // | Duration   | /  | i64      | Duration   |
 //! duration /= 7i64;                               // | Duration   | /= | i64      | Duration   |
-//! let result: Duration = duration * duration;     // | Duration   | *  | Duration | Duration   |
-//! duration *= duration;                           // | Duration   | *= | Duration | Duration   |
 //! let result: f64 = duration / duration;          // | Duration   | /  | Duration | f64        |
 //! let result: TimeWindow = time_window + duration;// | TimeWindow | +  | Duration | TimeWindow |
 //! time_window += duration;                        // | TimeWindow | += | Duration | TimeWindow |
@@ -765,28 +761,6 @@ impl From<Duration> for f64 {
 // OPERATORS FOR TIME      //
 /////////////////////////////
 
-impl Add<Time> for Time {
-    type Output = Time;
-
-    fn add(self, rhs: Time) -> Self::Output {
-        debug_assert!(
-            self.0.checked_add(rhs.0).is_some(),
-            "overflow detected: {self:?} + {rhs:?}"
-        );
-        Time(self.0 + rhs.0)
-    }
-}
-
-impl AddAssign<Time> for Time {
-    fn add_assign(&mut self, rhs: Time) {
-        debug_assert!(
-            self.0.checked_add(rhs.0).is_some(),
-            "overflow detected: {self:?} += {rhs:?}"
-        );
-        self.0 += rhs.0;
-    }
-}
-
 impl Sub<Time> for Time {
     type Output = Duration;
 
@@ -981,28 +955,6 @@ impl DivAssign<i64> for Duration {
     fn div_assign(&mut self, rhs: i64) {
         // forward to the float implementation
         self.div_assign(rhs as f64)
-    }
-}
-
-impl Mul for Duration {
-    type Output = Duration;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        debug_assert!(
-            self.0.checked_mul(rhs.0).is_some(),
-            "overflow detected: {self:?} * {rhs:?}"
-        );
-        Duration(self.0 * rhs.0)
-    }
-}
-
-impl MulAssign for Duration {
-    fn mul_assign(&mut self, rhs: Self) {
-        debug_assert!(
-            self.0.checked_mul(rhs.0).is_some(),
-            "overflow detected: {self:?} *= {rhs:?}"
-        );
-        self.0 *= rhs.0;
     }
 }
 
