@@ -1,47 +1,45 @@
 #![allow(rustdoc::private_intra_doc_links)]
 #![deny(rustdoc::broken_intra_doc_links)]
 #![warn(clippy::disallowed_types)]
+
 //! Low overhead implementation of time related concepts.
 //!
 //!  # Operator support
+//!
 //! ```no_run
 //! # use tinytime::Duration;
 //! # use tinytime::Time;
 //! # let mut time = Time::hours(3);
 //! # let duration = Duration::minutes(4);
-//!                                         // | left       | operator | right    | result     |
-//!                                         // | ---------- | -------- | -------- | ---------- |
-//! let result: Duration = time - time;     // | Time       | -        | Time     | Duration   |
-//! time += Time::hours(3);                 // | Time       | +=       | Time     | Time       |
-//!
-//! // | Time       | +        | Duration | Time       |
-//! assert_eq!(Duration::hours(5), Time::hours(10) - Time::hours(5));
-//! let mut t = Time::hours(5);
-//! t+= Time::hours(4);
-//! assert_eq!(Time::hours(9), t);
-//! // | Time       | +=       | Duration | Time       |
-//! // | Time       | -        | Duration | Time       |
-//! // | Time       | -=       | Duration | Time       |
-//! // | TimeWindow | +        | Duration | TimeWindow |
-//! // | TimeWindow | +=       | Duration | TimeWindow |
-//! // | TimeWindow | -        | Duration | TimeWindow |
-//! // | TimeWindow | -=       | Duration | TimeWindow |
-//! // | Duration   | +        | Duration | Duration   |
-//! // | Duration   | +=       | Duration | Duration   |
-//! // | Duration   | -        | Duration | Duration   |
-//! // | Duration   | -=       | Duration | Duration   |
-//! // | Duration   | *        | f64      | Duration   |
-//! // | Duration   | *=       | f64      | Duration   |
-//! // | Duration   | /        | f64      | Duration   |
-//! // | Duration   | /=       | f64      | Duration   |
-//! // | Duration   | *        | isize    | Duration   |
-//! // | Duration   | *=       | isize    | Duration   |
-//! // | Duration   | /        | isize    | Duration   |
-//! // | Duration   | /=       | isize    | Duration   |
-//! // | Duration   | *        | Duration | Duration   |
-//! // | Duration   | *=       | Duration | Duration   |
-//! // | Duration   | /        | Duration | Duration   |
-//! // | Duration   | /=       | Duration | Duration   |
+//! # let time_window = TimeWindow::new(Time::hours(2), Time::hours(3));
+//! // | example                                       | left       | op | right    | result     |
+//! // | ----------------------------------------------| ---------- | ---| -------- | ---------- |
+//! let result: Duration = time - time;             // | Time       | -  | Time     | Duration   |
+//! time += Time::hours(3);                         // | Time       | += | Time     | Time       |
+//! let result: Time = time + duration;             // | Time       | +  | Duration | Time       |
+//! time += duration;                               // | Time       | += | Duration | Time       |
+//! let result: Time = time - duration;             // | Time       | -  | Duration | Time       |
+//! time -= duration;                               // | Time       | -= | Duration | Time       |
+//! let result: TimeWindow = time_window + duration;// | TimeWindow | +  | Duration | TimeWindow |
+//! time_window += duration;                        // | TimeWindow | += | Duration | TimeWindow |
+//! let result: TimeWindow = time_window - duration;// | TimeWindow | -  | Duration | TimeWindow |
+//! time_window -= duration;                        // | TimeWindow | -= | Duration | TimeWindow |
+//! let result: Duration = duration + duration;     // | Duration   | +  | Duration | Duration   |
+//! duration += duration;                           // | Duration   | += | Duration | Duration   |
+//! let result: Duration = duration - duration;     // | Duration   | -  | Duration | Duration   |
+//! duration -= duration;                           // | Duration   | -= | Duration | Duration   |
+//! let result: Duration = duration * 1.0f64;       // | Duration   | *  | f64      | Duration   |
+//! duration *= 2.0f64;                             // | Duration   | *= | f64      | Duration   |
+//! let result: Duration = duration / 2.0f64;       // | Duration   | /  | f64      | Duration   |
+//! duration /= 2.0f64;                             // | Duration   | /= | f64      | Duration   |
+//! let result: Duration = duration * 7isize;       // | Duration   | *  | isize    | Duration   |
+//! duration *= 7isize;                             // | Duration   | *= | isize    | Duration   |
+//! let result: Duration = duration / 7isize;       // | Duration   | /  | isize    | Duration   |
+//! duration /= 7isize;                             // | Duration   | /= | isize    | Duration   |
+//! let result: Duration = duration * duration;     // | Duration   | *  | Duration | Duration   |
+//! duration *= duration;                           // | Duration   | *= | Duration | Duration   |
+//! let result: Duration = duration / duration;     // | Duration   | /  | Duration | Duration   |
+//! duration /= duration;                           // | Duration   | /= | Duration | Duration   |
 //!```
 use core::fmt;
 use std::cmp::max;
