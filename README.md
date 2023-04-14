@@ -23,34 +23,3 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
-
-| left       | operator | right    | result     | note              |
-| ---------- | -------- | -------- | ---------- | ----------------- |
-| Time       | -        | Time     | Duration   |                   |
-| Time       | +=       | Time     | Time       | seems unexpected? |
-| Time       | +        | Duration | Time       |                   |
-| Time       | +=       | Duration | Time       |                   |
-| Time       | -        | Duration | Time       |                   |
-| Time       | -=       | Duration | Time       |                   |
-| TimeWindow | +        | Duration | TimeWindow |                   |
-| TimeWindow | +=       | Duration | TimeWindow |                   |
-| TimeWindow | -        | Duration | TimeWindow |                   |
-| TimeWindow | -=       | Duration | TimeWindow |                   |
-| Duration   | +        | Duration | Duration   |                   |
-| Duration   | +=       | Duration | Duration   |                   |
-| Duration   | -        | Duration | Duration   |                   |
-| Duration   | -=       | Duration | Duration   |                   |
-| Duration   | *        | f64      | Duration   |                   |
-| Duration   | *=       | f64      | Duration   |                   |
-| Duration   | /        | f64      | Duration   |                   |
-| Duration   | /=       | f64      | Duration   |                   |
-| Duration   | *        | isize    | Duration   |                   |
-| Duration   | *=       | isize    | Duration   |                   |
-| Duration   | /        | isize    | Duration   |                   |
-| Duration   | /=       | isize    | Duration   |                   |
-| Duration   | *        | Duration | Duration   |                   |
-| Duration   | *=       | Duration | Duration   |                   |
-| Duration   | /        | Duration | Duration   |                   |
-| Duration   | /=       | Duration | Duration   |                   |
-
-| Duration | Neg, Sum
