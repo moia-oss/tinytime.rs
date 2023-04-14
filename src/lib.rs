@@ -890,7 +890,10 @@ impl Mul<Duration> for f64 {
 
 impl MulAssign<f64> for Duration {
     fn mul_assign(&mut self, rhs: f64) {
-        self.0 = (self.0 as f64 * rhs).round() as i64;
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            self.0 = (self.0 as f64 * rhs).round() as i64;
+        }
     }
 }
 
@@ -912,7 +915,10 @@ impl Div<f64> for Duration {
 
 impl DivAssign<f64> for Duration {
     fn div_assign(&mut self, rhs: f64) {
-        self.0 = (self.0 as f64 / rhs).round() as i64;
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            self.0 = (self.0 as f64 / rhs).round() as i64;
+        }
     }
 }
 
