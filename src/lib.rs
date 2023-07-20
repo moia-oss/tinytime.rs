@@ -255,7 +255,7 @@ impl Time {
 impl Display for Time {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let rfc3339_string = self.to_rfc3339();
-        return write!(f, "{rfc3339_string}");
+        write!(f, "{rfc3339_string}")
     }
 }
 
