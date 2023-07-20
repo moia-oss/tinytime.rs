@@ -252,6 +252,13 @@ impl Time {
     }
 }
 
+impl Display for Time {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let rfc3339_string = self.to_rfc3339();
+        return write!(f, "{rfc3339_string}");
+    }
+}
+
 /// Allows deserializing from RFC 3339 strings and unsigned integers.
 impl<'de> Deserialize<'de> for Time {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
