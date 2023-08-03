@@ -1085,6 +1085,34 @@ impl Display for DurationParseError {
 
 const REGEX: &str = r"^(?P<sign>-)?((?P<h>\d+)h)?((?P<m>\d+)m)?((?P<s>\d+)s)?((?P<ms>\d+)ms)?$";
 
+// Numbers as stated in ISO 8601.
+#[derive(Eq, PartialEq, Hash, Debug)]
+pub enum DayOfWeek {
+    Monday = 1,
+    Tuesday = 2,
+    Wednesday = 3,
+    Thursday = 4,
+    Friday = 5,
+    Saturday = 6,
+    Sunday = 7,
+}
+
+impl From<Time> for DayOfWeek {
+    fn from(time: Time) -> Self {
+        let value = ((time.since_epoch().as_seconds() / 86400) + 4) % 7;
+        match value {
+            0 => DayOfWeek::Sunday,
+            1 => DayOfWeek::Monday,
+            2 => DayOfWeek::Tuesday,
+            3 => DayOfWeek::Wednesday,
+            4 => DayOfWeek::Thursday,
+            5 => DayOfWeek::Friday,
+            6 => DayOfWeek::Saturday,
+            value => panic!("Mathematically possible modulo 7 values are [0,6]. Given {value}."),
+        }
+    }
+}
+
 #[cfg(test)]
 mod time_test {
     use serde_test::assert_de_tokens;
@@ -1426,5 +1454,23 @@ mod duration_test {
         let json = serde_json::to_string(&expected).unwrap();
         let actual: Duration = serde_json::from_str(json.as_str()).unwrap();
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn day_of_week_from_time() {
+        let monday = DayOfWeek::from(Time::seconds(1690761600));
+        let tuesday = DayOfWeek::from(Time::seconds(1690848000));
+        let wednesday = DayOfWeek::from(Time::seconds(1690934400));
+        let thursday = DayOfWeek::from(Time::seconds(1691020800));
+        let friday = DayOfWeek::from(Time::seconds(1691107200));
+        let saturday = DayOfWeek::from(Time::seconds(1691193600));
+        let sunday = DayOfWeek::from(Time::seconds(1691280000));
+        assert_eq!(monday, DayOfWeek::Monday);
+        assert_eq!(tuesday, DayOfWeek::Tuesday);
+        assert_eq!(wednesday, DayOfWeek::Wednesday);
+        assert_eq!(thursday, DayOfWeek::Thursday);
+        assert_eq!(friday, DayOfWeek::Friday);
+        assert_eq!(saturday, DayOfWeek::Saturday);
+        assert_eq!(sunday, DayOfWeek::Sunday);
     }
 }
