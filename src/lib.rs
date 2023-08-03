@@ -1108,7 +1108,8 @@ impl From<Time> for DayOfWeek {
             4 => DayOfWeek::Thursday,
             5 => DayOfWeek::Friday,
             6 => DayOfWeek::Saturday,
-            value => panic!("Mathematically possible modulo 7 values are [0,6]. Given {value}."),
+            // Mathematically possible modulo 7 values are [0,6]. But we're not allowed to panic
+            _ => DayOfWeek::Sunday,
         }
     }
 }
