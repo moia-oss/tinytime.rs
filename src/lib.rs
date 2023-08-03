@@ -250,6 +250,12 @@ impl Time {
     pub fn since_epoch(&self) -> Duration {
         Duration::millis(self.as_millis())
     }
+
+    pub fn since_midnight(&self) -> Duration {
+        let millis_in_day = 86400000;
+        let millis_since_midnight = self.as_millis() % millis_in_day;
+        Duration::millis(millis_since_midnight)
+    }
 }
 
 impl Display for Time {
@@ -1214,6 +1220,16 @@ mod time_test {
             Err("Duration cannot be negative."),
             Time::try_from(duration_neg)
         );
+    }
+
+    #[test]
+    fn test_time_since_midnight() {
+        assert_eq!(
+            Time::millis(1691100000000).since_midnight().as_minutes(),
+            1320
+        );
+        assert_eq!(Time::millis(1691020805000).since_midnight().as_seconds(), 5);
+        assert_eq!(Time::millis(1691020800001).since_midnight().as_millis(), 1);
     }
 }
 
