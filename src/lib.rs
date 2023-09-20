@@ -317,7 +317,7 @@ impl From<Time> for std::time::SystemTime {
 }
 
 /// An interval or range of time: `[start,end)`.
-#[derive(Clone, Debug, Eq, PartialEq, Default, Copy, Serialize, Deserialize, From, Into)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Copy, Serialize, Deserialize, From, Into, Hash)]
 pub struct TimeWindow {
     start: Time,
     end: Time,
