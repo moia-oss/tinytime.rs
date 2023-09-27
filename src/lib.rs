@@ -354,10 +354,22 @@ impl TimeWindow {
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
     pub fn from_duration(start: Time, duration: Duration) -> Self {
-        TimeWindow {
-            start,
-            end: start.add(duration),
-        }
+        TimeWindow::new(start, start.add(duration))
+    }
+
+    /// Creates time window from duration and end time.
+    /// # Examples
+    ///
+    /// ```
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
+    /// let mut x = TimeWindow::from_end(Duration::seconds(2), Time::seconds(3));
+    /// assert_eq!(Time::seconds(1), x.start());
+    /// assert_eq!(Time::seconds(3), x.end());
+    /// ```
+    pub fn from_end(duration: Duration, end: Time) -> Self {
+        TimeWindow::new(end.sub(duration), end)
     }
 
     pub const fn instant(time: Time) -> Self {
