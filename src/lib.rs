@@ -412,8 +412,8 @@ impl TimeWindow {
         self.end = end;
     }
 
-    /// Extends time window start to the given value. Is a No-Op when given value
-    /// isn't earlier than current time window start.
+    /// Extends time window start to the given value. Is a No-Op when given
+    /// value isn't earlier than current time window start.
     /// Returns by which duration the start was moved.
     /// # Examples
     ///
