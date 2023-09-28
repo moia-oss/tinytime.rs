@@ -458,6 +458,25 @@ impl TimeWindow {
         })
     }
 
+    /// Extends time window start by the given duration.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
+    /// let x = TimeWindow::from_seconds(8, 9);
+    /// let y = x.extend_start_by(Duration::seconds(3));
+    /// assert_eq!(Time::seconds(5), y.start());
+    /// ```
+    pub fn extend_start_by(&self, duration: Duration) -> TimeWindow {
+        TimeWindow {
+            start: self.start - duration,
+            end: self.end,
+        }
+    }
+
     /// Extends time window end by the given duration.
     ///
     /// # Examples
@@ -466,11 +485,9 @@ impl TimeWindow {
     /// # use tinytime::Duration;
     /// # use tinytime::Time;
     /// # use tinytime::TimeWindow;
-    /// let mut x = TimeWindow::from_seconds(1, 2);
-    /// assert_eq!(
-    ///     Time::seconds(5),
-    ///     x.extend_end_by(Duration::seconds(3)).end()
-    /// );
+    /// let x = TimeWindow::from_seconds(1, 2);
+    /// let y = x.extend_end_by(Duration::seconds(3));
+    /// assert_eq!(Time::seconds(5), y.end());
     /// ```
     pub fn extend_end_by(&self, duration: Duration) -> TimeWindow {
         TimeWindow {
