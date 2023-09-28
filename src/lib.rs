@@ -412,6 +412,29 @@ impl TimeWindow {
         self.end = end;
     }
 
+    /// Extends time window start to the given value. Is a No-Op when given
+    /// value isn't earlier than current time window start.
+    /// Returns by which duration the start was moved.
+    /// # Examples
+    ///
+    /// ```
+    /// # use tinytime::Duration;
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
+    /// let mut x = TimeWindow::from_seconds(4, 5);
+    /// assert_eq!(Some(Duration::seconds(1)), x.extend_start(Time::seconds(3)));
+    /// assert_eq!(Time::seconds(3), x.start());
+    /// assert_eq!(None, x.extend_start(Time::seconds(6)));
+    /// assert_eq!(Time::seconds(3), x.start());
+    /// ```
+    pub fn extend_start(&mut self, new_start: Time) -> Option<Duration> {
+        (new_start < self.start).then(|| {
+            let diff = self.start - new_start;
+            self.set_start(new_start);
+            diff
+        })
+    }
+
     /// Extends time window end to the given value. Is a No-Op when given value
     /// isn't greater than current time window end.
     /// Returns by which duration the deadline was extended.
