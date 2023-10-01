@@ -9,7 +9,7 @@ jobs:
     name: Check for unused dependencies
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: |
           echo "RUST_TOOLCHAIN=$(cat ./rust-toolchain)" >> $GITHUB_ENV
           echo "RUST_TOOLCHAIN_NIGHTLY=$(cat ./rust-toolchain-nightly)" >> $GITHUB_ENV
