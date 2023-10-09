@@ -568,6 +568,30 @@ impl TimeWindow {
         self.start < that.end && that.start < self.end
     }
 
+    /// Returns time window that is an intersection between this time window and another one.
+    /// Returns None if time windows don't overlap.
+    /// # Examples
+    ///
+    /// ```
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
+    /// let x = TimeWindow::from_seconds(5, 10);
+    /// assert_eq!(Some(TimeWindow::from_seconds(5, 10)), x.overlap(&TimeWindow::from_seconds(5, 10)));
+    /// assert_eq!(Some(TimeWindow::from_seconds(5, 10)), x.overlap(&TimeWindow::from_seconds(3, 12)));
+    /// assert_eq!(Some(TimeWindow::from_seconds(6, 9)), x.overlap(&TimeWindow::from_seconds(6, 9)));
+    /// assert_eq!(Some(TimeWindow::from_seconds(6, 10)), x.overlap(&TimeWindow::from_seconds(6, 12)));
+    /// assert_eq!(Some(TimeWindow::from_seconds(5, 9)), x.overlap(&TimeWindow::from_seconds(3, 9)));
+    /// assert_eq!(None, x.overlap(&TimeWindow::from_seconds(1, 4)));
+    /// assert_eq!(None, x.overlap(&TimeWindow::from_seconds(1, 5)));
+    /// assert_eq!(None, x.overlap(&TimeWindow::from_seconds(10, 15)));
+    /// assert_eq!(None, x.overlap(&TimeWindow::from_seconds(11, 15)));
+    /// ```
+    pub fn overlap(&self, that: &TimeWindow) -> Option<TimeWindow> {
+        let start = max(self.start, that.start);
+        let end = max(self.end, that.end);
+        (start >= end).then(|| TimeWindow::new(start, end))
+    }
+
     /// Shifts this time window by `duration` into the future. Affects both
     /// `start` and `end` equally.
     ///
