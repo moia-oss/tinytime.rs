@@ -38,7 +38,8 @@
 
 //! ```
 use core::fmt;
-use std::cmp::{max, min};
+use std::cmp::max;
+use std::cmp::min;
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Debug;
@@ -567,22 +568,56 @@ impl TimeWindow {
         self.start < that.end && that.start < self.end
     }
 
-    /// Returns time window that is an intersection between this time window and another one.
-    /// Returns None if time windows don't overlap.
+    /// Returns time window that is an intersection between this time window and
+    /// another one. Returns None if time windows don't overlap.
     /// # Examples
     ///
     /// ```
     /// # use tinytime::TimeWindow;
     /// let x = TimeWindow::from_seconds(5, 10);
-    /// assert_eq!(Some(TimeWindow::from_seconds(5, 10)), x.intersect(&TimeWindow::from_seconds(5, 10)), "time windows are equal");
-    /// assert_eq!(Some(TimeWindow::from_seconds(5, 10)), x.intersect(&TimeWindow::from_seconds(3, 12)), "that contains x");
-    /// assert_eq!(Some(TimeWindow::from_seconds(6, 9)), x.intersect(&TimeWindow::from_seconds(6, 9)), "x contains that");
-    /// assert_eq!(Some(TimeWindow::from_seconds(6, 10)), x.intersect(&TimeWindow::from_seconds(6, 12)));
-    /// assert_eq!(Some(TimeWindow::from_seconds(5, 9)), x.intersect(&TimeWindow::from_seconds(3, 9)));
-    /// assert_eq!(None, x.intersect(&TimeWindow::from_seconds(1, 4)), "that is before x");
-    /// assert_eq!(Some(TimeWindow::from_seconds(5, 5)), x.intersect(&TimeWindow::from_seconds(1, 5)), "single-point intersection");
-    /// assert_eq!(Some(TimeWindow::from_seconds(10, 10)), x.intersect(&TimeWindow::from_seconds(10, 15)), "single-point intersection");
-    /// assert_eq!(None, x.intersect(&TimeWindow::from_seconds(11, 15)), "that is after x");
+    /// assert_eq!(
+    ///     Some(TimeWindow::from_seconds(5, 10)),
+    ///     x.intersect(&TimeWindow::from_seconds(5, 10)),
+    ///     "time windows are equal"
+    /// );
+    /// assert_eq!(
+    ///     Some(TimeWindow::from_seconds(5, 10)),
+    ///     x.intersect(&TimeWindow::from_seconds(3, 12)),
+    ///     "that contains x"
+    /// );
+    /// assert_eq!(
+    ///     Some(TimeWindow::from_seconds(6, 9)),
+    ///     x.intersect(&TimeWindow::from_seconds(6, 9)),
+    ///     "x contains that"
+    /// );
+    /// assert_eq!(
+    ///     Some(TimeWindow::from_seconds(6, 10)),
+    ///     x.intersect(&TimeWindow::from_seconds(6, 12))
+    /// );
+    /// assert_eq!(
+    ///     Some(TimeWindow::from_seconds(5, 9)),
+    ///     x.intersect(&TimeWindow::from_seconds(3, 9))
+    /// );
+    /// assert_eq!(
+    ///     None,
+    ///     x.intersect(&TimeWindow::from_seconds(1, 4)),
+    ///     "that is before x"
+    /// );
+    /// assert_eq!(
+    ///     Some(TimeWindow::from_seconds(5, 5)),
+    ///     x.intersect(&TimeWindow::from_seconds(1, 5)),
+    ///     "single-point intersection"
+    /// );
+    /// assert_eq!(
+    ///     Some(TimeWindow::from_seconds(10, 10)),
+    ///     x.intersect(&TimeWindow::from_seconds(10, 15)),
+    ///     "single-point intersection"
+    /// );
+    /// assert_eq!(
+    ///     None,
+    ///     x.intersect(&TimeWindow::from_seconds(11, 15)),
+    ///     "that is after x"
+    /// );
     /// ```
     pub fn intersect(&self, that: &TimeWindow) -> Option<TimeWindow> {
         let start = max(self.start, that.start);
