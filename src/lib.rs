@@ -38,7 +38,7 @@
 
 //! ```
 use core::fmt;
-use std::cmp::max;
+use std::cmp::{max, min};
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Debug;
@@ -551,7 +551,6 @@ impl TimeWindow {
     /// # Examples
     ///
     /// ```
-    /// # use tinytime::Time;
     /// # use tinytime::TimeWindow;
     /// let mut x = TimeWindow::from_seconds(5, 10);
     /// assert!(x.overlaps(&TimeWindow::from_seconds(5, 10)));
@@ -573,23 +572,22 @@ impl TimeWindow {
     /// # Examples
     ///
     /// ```
-    /// # use tinytime::Time;
     /// # use tinytime::TimeWindow;
     /// let x = TimeWindow::from_seconds(5, 10);
-    /// assert_eq!(Some(TimeWindow::from_seconds(5, 10)), x.overlap(&TimeWindow::from_seconds(5, 10)));
-    /// assert_eq!(Some(TimeWindow::from_seconds(5, 10)), x.overlap(&TimeWindow::from_seconds(3, 12)));
-    /// assert_eq!(Some(TimeWindow::from_seconds(6, 9)), x.overlap(&TimeWindow::from_seconds(6, 9)));
-    /// assert_eq!(Some(TimeWindow::from_seconds(6, 10)), x.overlap(&TimeWindow::from_seconds(6, 12)));
-    /// assert_eq!(Some(TimeWindow::from_seconds(5, 9)), x.overlap(&TimeWindow::from_seconds(3, 9)));
-    /// assert_eq!(None, x.overlap(&TimeWindow::from_seconds(1, 4)));
-    /// assert_eq!(None, x.overlap(&TimeWindow::from_seconds(1, 5)));
-    /// assert_eq!(None, x.overlap(&TimeWindow::from_seconds(10, 15)));
-    /// assert_eq!(None, x.overlap(&TimeWindow::from_seconds(11, 15)));
+    /// assert_eq!(Some(TimeWindow::from_seconds(5, 10)), x.intersect(&TimeWindow::from_seconds(5, 10)), "time windows are equal");
+    /// assert_eq!(Some(TimeWindow::from_seconds(5, 10)), x.intersect(&TimeWindow::from_seconds(3, 12)), "that contains x");
+    /// assert_eq!(Some(TimeWindow::from_seconds(6, 9)), x.intersect(&TimeWindow::from_seconds(6, 9)), "x contains that");
+    /// assert_eq!(Some(TimeWindow::from_seconds(6, 10)), x.intersect(&TimeWindow::from_seconds(6, 12)));
+    /// assert_eq!(Some(TimeWindow::from_seconds(5, 9)), x.intersect(&TimeWindow::from_seconds(3, 9)));
+    /// assert_eq!(None, x.intersect(&TimeWindow::from_seconds(1, 4)), "that is before x");
+    /// assert_eq!(Some(TimeWindow::from_seconds(5, 5)), x.intersect(&TimeWindow::from_seconds(1, 5)), "single-point intersection");
+    /// assert_eq!(Some(TimeWindow::from_seconds(10, 10)), x.intersect(&TimeWindow::from_seconds(10, 15)), "single-point intersection");
+    /// assert_eq!(None, x.intersect(&TimeWindow::from_seconds(11, 15)), "that is after x");
     /// ```
-    pub fn overlap(&self, that: &TimeWindow) -> Option<TimeWindow> {
+    pub fn intersect(&self, that: &TimeWindow) -> Option<TimeWindow> {
         let start = max(self.start, that.start);
-        let end = max(self.end, that.end);
-        (start >= end).then(|| TimeWindow::new(start, end))
+        let end = min(self.end, that.end);
+        (start <= end).then(|| TimeWindow::new(start, end))
     }
 
     /// Shifts this time window by `duration` into the future. Affects both
