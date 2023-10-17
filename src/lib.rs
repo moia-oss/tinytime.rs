@@ -548,6 +548,22 @@ impl TimeWindow {
         }
     }
 
+    /// Returns true if this time window contains the given time.
+    /// # Examples
+    ///
+    /// ```
+    /// # use tinytime::{Time, TimeWindow};
+    /// let mut x = TimeWindow::from_seconds(5, 10);
+    /// assert!(!x.contains(Time::seconds(4)));
+    /// assert!(x.contains(Time::seconds(5)));
+    /// assert!(x.contains(Time::seconds(7)));
+    /// assert!(x.contains(Time::seconds(10)));
+    /// assert!(!x.contains(Time::seconds(11)));
+    /// ```
+    pub fn contains(&self, that: Time) -> bool {
+        self.start <= that && that <= self.end
+    }
+
     /// Returns true if this time window overlaps with another one
     /// # Examples
     ///
