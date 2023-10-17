@@ -548,19 +548,32 @@ impl TimeWindow {
         }
     }
 
-    /// Postpones the time window start so that the new duration matches the given value.
-    /// Is a No-Op if the new duration is smaller than the current one.
-    /// Negative durations set the result time window size to zero.
-    /// # Examples
+    /// Postpones the time window start so that the new duration matches the
+    /// given value. Is a No-Op if the new duration is smaller than the
+    /// current one. Negative durations set the result time window size to
+    /// zero.
     ///
+    /// # Examples
     /// ```
     /// # use tinytime::Duration;
     /// # use tinytime::TimeWindow;
     /// let x = TimeWindow::from_seconds(1, 3);
-    /// assert_eq!(TimeWindow::from_seconds(3, 3), x.shrink_towards_end_to(Duration::seconds(-1)));
-    /// assert_eq!(TimeWindow::from_seconds(3, 3), x.shrink_towards_end_to(Duration::seconds(0)));
-    /// assert_eq!(TimeWindow::from_seconds(2, 3), x.shrink_towards_end_to(Duration::seconds(1)));
-    /// assert_eq!(TimeWindow::from_seconds(1, 3), x.shrink_towards_end_to(Duration::seconds(5)));
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(3, 3),
+    ///     x.shrink_towards_end_to(Duration::seconds(-1))
+    /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(3, 3),
+    ///     x.shrink_towards_end_to(Duration::seconds(0))
+    /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(2, 3),
+    ///     x.shrink_towards_end_to(Duration::seconds(1))
+    /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 3),
+    ///     x.shrink_towards_end_to(Duration::seconds(5))
+    /// );
     /// ```
     pub fn shrink_towards_end_to(self, new_duration: Duration) -> TimeWindow {
         let duration = new_duration
@@ -570,19 +583,31 @@ impl TimeWindow {
         TimeWindow::from_end(duration, self.end)
     }
 
-    /// Prepones the time window end so that the new duration matches the given value.
-    /// Is a No-Op if the new duration is smaller than the current one.
-    /// Negative durations set the result time window size to zero.
-    /// # Examples
+    /// Prepones the time window end so that the new duration matches the given
+    /// value. Is a No-Op if the new duration is smaller than the current
+    /// one. Negative durations set the result time window size to zero.
     ///
+    /// # Examples
     /// ```
     /// # use tinytime::Duration;
     /// # use tinytime::TimeWindow;
     /// let x = TimeWindow::from_seconds(1, 3);
-    /// assert_eq!(TimeWindow::from_seconds(1, 1), x.shrink_towards_start_to(Duration::seconds(-1)));
-    /// assert_eq!(TimeWindow::from_seconds(1, 1), x.shrink_towards_start_to(Duration::seconds(0)));
-    /// assert_eq!(TimeWindow::from_seconds(1, 2), x.shrink_towards_start_to(Duration::seconds(1)));
-    /// assert_eq!(TimeWindow::from_seconds(1, 3), x.shrink_towards_start_to(Duration::seconds(5)));
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 1),
+    ///     x.shrink_towards_start_to(Duration::seconds(-1))
+    /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 1),
+    ///     x.shrink_towards_start_to(Duration::seconds(0))
+    /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 2),
+    ///     x.shrink_towards_start_to(Duration::seconds(1))
+    /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 3),
+    ///     x.shrink_towards_start_to(Duration::seconds(5))
+    /// );
     /// ```
     pub fn shrink_towards_start_to(self, new_duration: Duration) -> TimeWindow {
         let duration = new_duration
