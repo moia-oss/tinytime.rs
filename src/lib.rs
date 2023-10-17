@@ -548,7 +548,6 @@ impl TimeWindow {
         }
     }
 
-
     /// Returns true if this time window contains the given time.
     /// # Examples
     ///
