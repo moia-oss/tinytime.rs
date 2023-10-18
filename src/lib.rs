@@ -337,9 +337,9 @@ pub struct TimeWindow {
 }
 
 impl TimeWindow {
-    /// constructs a new TimeWindow.
-    /// debug_asserts that start < end. Sets end to start in release mode if
-    /// start > end.
+    /// Constructs a new [`TimeWindow`].
+    /// `debug_asserts` that `start < end`. Sets end to `start` in release mode
+    /// if `start > end`.
     pub fn new(start: Time, end: Time) -> Self {
         debug_assert!(start <= end);
         TimeWindow {
@@ -348,10 +348,10 @@ impl TimeWindow {
         }
     }
 
-    /// Constructs a new TimeWindow. Validates that start <= end and
+    /// Constructs a new [`TimeWindow`]. Validates that `start <= end` and
     /// returns an error if not.
-    /// # Examples
     ///
+    /// # Examples
     /// ```
     /// # use tinytime::{Duration, TimeWindowError};
     /// # use tinytime::Time;
