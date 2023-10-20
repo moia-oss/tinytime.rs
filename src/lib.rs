@@ -42,8 +42,9 @@ use std::cmp::max;
 use std::cmp::min;
 use std::cmp::Ordering;
 use std::error::Error;
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 use std::fmt::Display;
+use std::fmt::Formatter;
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Div;
@@ -74,7 +75,7 @@ use thiserror::Error;
 ///
 /// Low overhead time representation. Internally represented as milliseconds.
 #[derive(
-Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Serialize, Deref, From, Into,
+    Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Serialize, Deref, From, Into,
 )]
 pub struct Time(i64);
 
@@ -134,7 +135,7 @@ impl Time {
         // casting to u32 is safe here because it is guaranteed that the value is in
         // 0..1_000_000_000
         #[allow(clippy::cast_possible_truncation)]
-            let nanos = if nanos.is_negative() {
+        let nanos = if nanos.is_negative() {
             1_000_000_000 - nanos.unsigned_abs()
         } else {
             nanos.unsigned_abs()
@@ -265,8 +266,8 @@ impl Display for Time {
 /// Allows deserializing from RFC 3339 strings and unsigned integers.
 impl<'de> Deserialize<'de> for Time {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de>,
+    where
+        D: serde::Deserializer<'de>,
     {
         deserializer.deserialize_any(TimeVisitor)
     }
@@ -282,15 +283,15 @@ impl<'de> Visitor<'de> for TimeVisitor {
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
+    where
+        E: serde::de::Error,
     {
         Time::parse_from_rfc3339(v).map_err(|e| E::custom(e.to_string()))
     }
 
     fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
+    where
+        E: serde::de::Error,
     {
         i64::try_from(v)
             .map_err(|e| E::custom(e.to_string()))
@@ -298,8 +299,8 @@ impl<'de> Visitor<'de> for TimeVisitor {
     }
 
     fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-        where
-            D: serde::Deserializer<'de>,
+    where
+        D: serde::Deserializer<'de>,
     {
         // expecting an unsigned integer inside the newtype struct, but technically also
         // allowing strings
@@ -804,21 +805,21 @@ impl TimeWindow {
 /// Duration can be negative. Internally duration is represented as
 /// milliseconds.
 #[derive(
-Eq,
-PartialEq,
-Ord,
-PartialOrd,
-Copy,
-Clone,
-Debug,
-Default,
-Hash,
-Serialize,
-Deref,
-From,
-Into,
-Sum,
-Neg,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    Hash,
+    Serialize,
+    Deref,
+    From,
+    Into,
+    Sum,
+    Neg,
 )]
 pub struct Duration(i64);
 
@@ -904,8 +905,8 @@ impl Duration {
 /// Allows deserializing from strings, unsigned integers, and signed integers.
 impl<'de> Deserialize<'de> for Duration {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de>,
+    where
+        D: serde::Deserializer<'de>,
     {
         deserializer.deserialize_any(DurationVisitor)
     }
@@ -935,15 +936,15 @@ impl<'de> Visitor<'de> for DurationVisitor {
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
+    where
+        E: serde::de::Error,
     {
         Duration::from_str(v).map_err(|e| E::custom(e.to_string()))
     }
 
     fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
+    where
+        E: serde::de::Error,
     {
         i64::try_from(v)
             .map_err(|e| E::custom(e.to_string()))
@@ -951,15 +952,15 @@ impl<'de> Visitor<'de> for DurationVisitor {
     }
 
     fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
+    where
+        E: serde::de::Error,
     {
         Ok(Duration::millis(v))
     }
 
     fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-        where
-            D: serde::Deserializer<'de>,
+    where
+        D: serde::Deserializer<'de>,
     {
         // expecting a signed integer inside the newtype struct, but technically also
         // allowing strings and signed integers
@@ -1256,11 +1257,11 @@ impl From<Duration> for std::time::Duration {
             "Negative Duration {input} cannot be converted to std::time::Duration"
         );
         #[allow(clippy::cast_sign_loss)] // caught by the debug_assert above
-            let secs = (input.0 / 1000) as u64;
+        let secs = (input.0 / 1000) as u64;
         // casting to u32 is safe here because it is guaranteed that the value is in
         // 0..1_000_000_000. The sign loss is caught by the debug_assert above.
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-            let nanos = ((input.0 % 1000) * 1_000_000) as u32;
+        let nanos = ((input.0 % 1000) * 1_000_000) as u32;
         std::time::Duration::new(secs, nanos)
     }
 }
@@ -1565,7 +1566,7 @@ mod duration_test {
                 + Duration::minutes(3)
                 + Duration::seconds(4)
                 + Duration::millis(5))
-                .to_string()
+            .to_string()
         );
 
         assert_eq!("0ms", Duration::ZERO.to_string());
