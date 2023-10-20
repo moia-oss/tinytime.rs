@@ -330,11 +330,7 @@ pub enum TimeWindowError {
 impl Debug for Time {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let positive = self.0 >= 0;
-        let mut total = if self.0 == i64::MIN {
-            9223372036854775808usize
-        } else {
-            self.0.abs() as usize
-        };
+        let mut total = self.0.unsigned_abs();
         let millis_part = total % 1000;
         total -= millis_part;
         let seconds_part = (total % (1000 * 60)) / 1000;
