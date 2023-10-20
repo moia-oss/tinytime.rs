@@ -77,6 +77,7 @@ use thiserror::Error;
 Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Serialize, Deref, From, Into,
 )]
 pub struct Time(i64);
+
 impl Time {
     pub const MAX: Self = Self(i64::MAX);
     pub const EPOCH: Self = Self(0);
@@ -272,6 +273,7 @@ impl<'de> Deserialize<'de> for Time {
 }
 
 struct TimeVisitor;
+
 impl<'de> Visitor<'de> for TimeVisitor {
     type Value = Time;
 
@@ -318,6 +320,12 @@ impl From<Time> for std::time::SystemTime {
     }
 }
 
+#[derive(Error, Debug, Eq, PartialEq)]
+pub enum TimeWindowError {
+    #[error("time window start is after end")]
+    StartAfterEnd,
+}
+
 impl Debug for Time {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let positive = self.0 >= 0;
@@ -346,13 +354,10 @@ impl Debug for Time {
     }
 }
 
-#[derive(Error, Debug, Eq, PartialEq)]
-pub enum TimeWindowError {
-    #[error("time window start is after end")]
-    StartAfterEnd,
-}
-
 /// An interval or range of time: `[start,end)`.
+/// Debug-asserts ensure that start <= end.
+/// If compiled in release mode, the invariant of start <= end is maintained, by
+/// correcting invalid use of the API (and setting end to start).
 #[derive(Clone, Debug, Eq, PartialEq, Default, Copy, Serialize, Deserialize, From, Into, Hash)]
 pub struct TimeWindow {
     start: Time,
@@ -360,9 +365,37 @@ pub struct TimeWindow {
 }
 
 impl TimeWindow {
+    /// Constructs a new [`TimeWindow`].
+    /// `debug_asserts` that `start < end`. Sets end to `start` in release mode
+    /// if `start > end`.
     pub fn new(start: Time, end: Time) -> Self {
         debug_assert!(start <= end);
-        TimeWindow { start, end }
+        TimeWindow {
+            start,
+            end: end.max(start),
+        }
+    }
+
+    /// Constructs a new [`TimeWindow`]. Validates that `start <= end` and
+    /// returns an error if not.
+    ///
+    /// # Examples
+    /// ```
+    /// # use tinytime::{Duration, TimeWindowError};
+    /// # use tinytime::Time;
+    /// # use tinytime::TimeWindow;
+    /// assert!(TimeWindow::new_checked(Time::hours(1), Time::hours(2)).is_ok());
+    /// assert_eq!(
+    ///     Err(TimeWindowError::StartAfterEnd),
+    ///     TimeWindow::new_checked(Time::hours(2), Time::hours(1))
+    /// );
+    /// ```
+    pub fn new_checked(start: Time, end: Time) -> Result<Self, TimeWindowError> {
+        if start <= end {
+            Ok(TimeWindow { start, end })
+        } else {
+            Err(TimeWindowError::StartAfterEnd)
+        }
     }
 
     /// Returns [`TimeWindow`] with range [[`Time::EPOCH`], `end`)
@@ -438,14 +471,12 @@ impl TimeWindow {
         self.end - self.start
     }
 
-    pub fn set_start(&mut self, start: Time) {
-        debug_assert!(start <= self.end);
-        self.start = start;
+    pub fn with_new_start(self, start: Time) -> TimeWindow {
+        TimeWindow::new(start, self.end)
     }
 
-    pub fn set_end(&mut self, end: Time) {
-        debug_assert!(self.start <= end);
-        self.end = end;
+    pub fn with_new_end(self, end: Time) -> TimeWindow {
+        TimeWindow::new(self.start, end)
     }
 
     /// Extends time window start to the given value. Is a No-Op when given
@@ -466,7 +497,7 @@ impl TimeWindow {
     pub fn extend_start(&mut self, new_start: Time) -> Option<Duration> {
         (new_start < self.start).then(|| {
             let diff = self.start - new_start;
-            self.set_start(new_start);
+            *self = self.with_new_start(new_start);
             diff
         })
     }
@@ -489,7 +520,7 @@ impl TimeWindow {
     pub fn extend_end(&mut self, new_end: Time) -> Option<Duration> {
         (new_end > self.end).then(|| {
             let diff = new_end - self.end;
-            self.set_end(new_end);
+            *self = self.with_new_end(new_end);
             diff
         })
     }
@@ -551,9 +582,9 @@ impl TimeWindow {
     pub fn shrink_towards_end(&mut self, new_start: Time) {
         if new_start > self.start {
             if new_start > self.end {
-                self.set_start(self.end);
+                *self = self.with_new_start(self.end);
             } else {
-                self.set_start(new_start);
+                *self = self.with_new_start(new_start);
             }
         }
     }
@@ -576,9 +607,9 @@ impl TimeWindow {
     pub fn shrink_towards_start(&mut self, new_end: Time) {
         if new_end < self.end {
             if new_end < self.start {
-                self.set_end(self.start);
+                *self = self.with_new_end(self.start);
             } else {
-                self.set_end(new_end);
+                *self = self.with_new_end(new_end);
             }
         }
     }
@@ -893,6 +924,7 @@ impl PartialOrd<std::time::Duration> for Duration {
 }
 
 struct DurationVisitor;
+
 impl<'de> Visitor<'de> for DurationVisitor {
     type Value = Duration;
 
@@ -1232,6 +1264,7 @@ impl From<Duration> for std::time::Duration {
         std::time::Duration::new(secs, nanos)
     }
 }
+
 impl From<std::time::Duration> for Duration {
     fn from(input: std::time::Duration) -> Self {
         debug_assert!(
@@ -1301,6 +1334,7 @@ impl FromStr for Duration {
 pub enum DurationParseError {
     UnrecognizedFormat,
 }
+
 impl Error for DurationParseError {}
 
 impl Display for DurationParseError {
