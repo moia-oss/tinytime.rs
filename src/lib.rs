@@ -68,6 +68,7 @@ use regex::Regex;
 use serde::de::Visitor;
 use serde::Deserialize;
 use serde::Serialize;
+use thiserror::Error;
 
 /// A point in time.
 ///
@@ -339,7 +340,7 @@ impl Debug for Time {
         write!(f, "{:02}:", minutes_part)?;
         write!(f, "{:02}", seconds_part)?;
         if millis_part > 0 {
-            write!(f, ".{}", millis_part)?;
+            write!(f, ".{:03}", millis_part)?;
         }
         Ok(())
     }
@@ -1433,6 +1434,11 @@ mod time_test {
                 name: "i64::MIN",
                 input: Time::millis(i64::MIN),
                 expected: "-2562047788015:12:55.808".to_string(),
+            },
+            TestCase {
+                name: "millis",
+                input: Time::hours(3) + Duration::millis(42),
+                expected: "03:00:00.042".to_string(),
             },
         ];
         for test in tests {
