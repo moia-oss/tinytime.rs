@@ -44,6 +44,7 @@ use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Debug;
 use std::fmt::Display;
+use std::fmt::Formatter;
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Div;
@@ -74,7 +75,7 @@ use thiserror::Error;
 ///
 /// Low overhead time representation. Internally represented as milliseconds.
 #[derive(
-    Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Debug, Default, Serialize, Deref, From, Into,
+    Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Serialize, Deref, From, Into,
 )]
 pub struct Time(i64);
 
@@ -324,6 +325,33 @@ impl From<Time> for std::time::SystemTime {
 pub enum TimeWindowError {
     #[error("time window start is after end")]
     StartAfterEnd,
+}
+
+impl Debug for Time {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        // This implementation is tailor-made, because NaiveDateTime does not support
+        // the full range of Time. For some Time instances it wouldn't be
+        // possible to reconstruct them based on the Debug-representation ('∞').
+        let positive = self.0 >= 0;
+        let mut total = self.0.unsigned_abs();
+        let millis_part = total % 1000;
+        total -= millis_part;
+        let seconds_part = (total % (1000 * 60)) / 1000;
+        total -= seconds_part;
+        let minutes_part = (total % (1000 * 60 * 60)) / (1000 * 60);
+        total -= minutes_part;
+        let hours_part = total / (1000 * 60 * 60);
+        if !positive {
+            f.write_str("-")?;
+        }
+        write!(f, "{:02}:", hours_part)?;
+        write!(f, "{:02}:", minutes_part)?;
+        write!(f, "{:02}", seconds_part)?;
+        if millis_part > 0 {
+            write!(f, ".{:03}", millis_part)?;
+        }
+        Ok(())
+    }
 }
 
 /// An interval or range of time: `[start,end)`.
@@ -1388,6 +1416,70 @@ mod time_test {
                 test.expected,
                 test.input.format("%Y-%m-%dT%H:%M:%S+00:00").to_string(),
                 "format failed for test '{}'",
+                test.name
+            );
+        }
+    }
+
+    #[test]
+    fn test_debug() {
+        struct TestCase {
+            name: &'static str,
+            input: Time,
+            expected: String,
+        }
+        let tests = vec![
+            TestCase {
+                name: "EPOCH",
+                input: Time::EPOCH,
+                expected: "00:00:00".to_string(),
+            },
+            TestCase {
+                name: "i16::MAX + 1",
+                input: Time::seconds(i64::from(i16::MAX) + 1),
+                expected: "09:06:08".to_string(),
+            },
+            TestCase {
+                name: "i32::MAX + 1",
+                input: Time::seconds(i64::from(i32::MAX) + 1),
+                expected: "596523:14:08".to_string(),
+            },
+            TestCase {
+                name: "u32::MAX + 1",
+                input: Time::seconds(i64::from(u32::MAX) + 1),
+                expected: "1193046:28:16".to_string(),
+            },
+            TestCase {
+                name: "very large",
+                input: Time::seconds(i64::from(i32::MAX) * 3500),
+                expected: "2087831323:28:20".to_string(),
+            },
+            TestCase {
+                name: "MAX",
+                input: Time::MAX,
+                expected: "2562047788015:12:55.807".to_string(),
+            },
+            TestCase {
+                name: "i16::MIN",
+                input: Time::seconds(i64::from(i16::MIN)),
+                expected: "-09:06:08".to_string(),
+            },
+            TestCase {
+                name: "i64::MIN",
+                input: Time::millis(i64::MIN),
+                expected: "-2562047788015:12:55.808".to_string(),
+            },
+            TestCase {
+                name: "millis",
+                input: Time::hours(3) + Duration::millis(42),
+                expected: "03:00:00.042".to_string(),
+            },
+        ];
+        for test in tests {
+            assert_eq!(
+                test.expected,
+                format!("{:?}", test.input),
+                "test '{}' failed",
                 test.name
             );
         }
