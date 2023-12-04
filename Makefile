@@ -1,5 +1,5 @@
 RUST_NIGHTLY_VERSION  := $(shell cat rust-toolchain-nightly)
-GRCOV_VERSION         := 0.8.13
+GRCOV_VERSION         := 0.8.19
 
 install-nightly:
 	rustup toolchain install $(RUST_NIGHTLY_VERSION)
