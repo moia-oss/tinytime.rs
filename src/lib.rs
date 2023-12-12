@@ -54,6 +54,7 @@ use std::ops::MulAssign;
 use std::ops::Sub;
 use std::ops::SubAssign;
 use std::str::FromStr;
+use std::time::SystemTime;
 
 use chrono::format::DelayedFormat;
 use chrono::format::StrftimeItems;
@@ -167,12 +168,12 @@ impl Time {
             .map(|chrono_datetime| Time::millis(chrono_datetime.timestamp_millis()))
     }
 
-    /// Returns the current time instance.
+    /// Returns the current time instance based on `SystemTime`
     ///
     /// Don't use this method to compare if the current time has passed a
     /// certain deadline.
-    pub fn now() -> Time {
-        Time::millis(chrono::Local::now().timestamp_millis())
+    pub fn now() -> Result<Time, &'static str> {
+        Time::try_from(SystemTime::now())
     }
 
     pub fn as_millis(&self) -> i64 {
@@ -329,6 +330,17 @@ impl From<Time> for std::time::SystemTime {
         {
             std::time::UNIX_EPOCH + std::time::Duration::from_millis(input.0 as u64)
         }
+    }
+}
+
+impl TryFrom<std::time::SystemTime> for Time {
+    type Error = &'static str;
+    fn try_from(input: std::time::SystemTime) -> Result<Self, Self::Error> {
+        let dur: Duration = input
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .map_err(|_| "input before unix epoch")?
+            .into();
+        Self::try_from(dur)
     }
 }
 
