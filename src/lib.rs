@@ -172,8 +172,8 @@ impl Time {
     ///
     /// Don't use this method to compare if the current time has passed a
     /// certain deadline.
-    pub fn now() -> Result<Time, &'static str> {
-        Time::try_from(SystemTime::now())
+    pub fn now() -> Time {
+        Time::from(SystemTime::now())
     }
 
     pub fn as_millis(&self) -> i64 {
@@ -333,14 +333,15 @@ impl From<Time> for std::time::SystemTime {
     }
 }
 
-impl TryFrom<std::time::SystemTime> for Time {
-    type Error = &'static str;
-    fn try_from(input: std::time::SystemTime) -> Result<Self, Self::Error> {
-        let dur: Duration = input
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .map_err(|_| "input before unix epoch")?
-            .into();
-        Self::try_from(dur)
+impl From<std::time::SystemTime> for Time {
+    fn from(input: std::time::SystemTime) -> Self {
+        if input > SystemTime::UNIX_EPOCH {
+            let std_dur = input.duration_since(SystemTime::UNIX_EPOCH).unwrap();
+            Self::millis(Duration::from(std_dur).as_millis())
+        } else {
+            let std_dur = SystemTime::UNIX_EPOCH.duration_since(input).unwrap();
+            Self::millis(-Duration::from(std_dur).as_millis())
+        }
     }
 }
 
