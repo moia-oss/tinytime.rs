@@ -263,6 +263,17 @@ impl Display for Time {
     }
 }
 
+impl TryFrom<Duration> for Time {
+    type Error = &'static str;
+    fn try_from(duration: Duration) -> Result<Self, Self::Error> {
+        if duration.is_non_negative() {
+            Ok(Time::millis(duration.as_millis()))
+        } else {
+            Err("Duration cannot be negative.")
+        }
+    }
+}
+
 /// Allows deserializing from RFC 3339 strings and unsigned integers.
 impl<'de> Deserialize<'de> for Time {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -321,12 +332,6 @@ impl From<Time> for std::time::SystemTime {
     }
 }
 
-#[derive(Error, Debug, Eq, PartialEq)]
-pub enum TimeWindowError {
-    #[error("time window start is after end")]
-    StartAfterEnd,
-}
-
 impl Debug for Time {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         // This implementation is tailor-made, because NaiveDateTime does not support
@@ -352,6 +357,12 @@ impl Debug for Time {
         }
         Ok(())
     }
+}
+
+#[derive(Error, Debug, Eq, PartialEq)]
+pub enum TimeWindowError {
+    #[error("time window start is after end")]
+    StartAfterEnd,
 }
 
 /// An interval or range of time: `[start,end)`.
@@ -1008,17 +1019,6 @@ impl From<f64> for Duration {
         #[allow(clippy::cast_possible_truncation)]
         {
             Duration::millis(num.round() as i64)
-        }
-    }
-}
-
-impl TryFrom<Duration> for Time {
-    type Error = &'static str;
-    fn try_from(duration: Duration) -> Result<Self, Self::Error> {
-        if duration.is_non_negative() {
-            Ok(Time::millis(duration.as_millis()))
-        } else {
-            Err("Duration cannot be negative.")
         }
     }
 }
