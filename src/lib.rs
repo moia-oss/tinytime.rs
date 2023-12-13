@@ -55,6 +55,7 @@ use std::ops::Sub;
 use std::ops::SubAssign;
 #[cfg(feature = "parser")]
 use std::str::FromStr;
+use std::time::SystemTime;
 
 use chrono::format::DelayedFormat;
 use chrono::format::StrftimeItems;
@@ -170,12 +171,12 @@ impl Time {
             .map(|chrono_datetime| Time::millis(chrono_datetime.timestamp_millis()))
     }
 
-    /// Returns the current time instance.
+    /// Returns the current time instance based on `SystemTime`
     ///
     /// Don't use this method to compare if the current time has passed a
     /// certain deadline.
     pub fn now() -> Time {
-        Time::millis(chrono::Local::now().timestamp_millis())
+        Time::from(SystemTime::now())
     }
 
     pub fn as_millis(&self) -> i64 {
@@ -331,6 +332,18 @@ impl From<Time> for std::time::SystemTime {
         #[allow(clippy::cast_sign_loss)] // the debug_assert above should catch this case
         {
             std::time::UNIX_EPOCH + std::time::Duration::from_millis(input.0 as u64)
+        }
+    }
+}
+
+impl From<std::time::SystemTime> for Time {
+    fn from(input: std::time::SystemTime) -> Self {
+        if input > SystemTime::UNIX_EPOCH {
+            let std_dur = input.duration_since(SystemTime::UNIX_EPOCH).unwrap();
+            Self::millis(Duration::from(std_dur).as_millis())
+        } else {
+            let std_dur = SystemTime::UNIX_EPOCH.duration_since(input).unwrap();
+            Self::millis(-Duration::from(std_dur).as_millis())
         }
     }
 }
