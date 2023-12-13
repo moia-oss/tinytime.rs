@@ -57,10 +57,6 @@ use std::ops::SubAssign;
 use std::str::FromStr;
 use std::time::SystemTime;
 
-use chrono::format::DelayedFormat;
-use chrono::format::StrftimeItems;
-use chrono::DateTime;
-use chrono::NaiveDateTime;
 use derive_more::Deref;
 use derive_more::From;
 use derive_more::Into;
@@ -70,17 +66,19 @@ use derive_more::Sum;
 use lazy_static::lazy_static;
 #[cfg(feature = "parser")]
 use regex::Regex;
+#[cfg(feature = "formater")]
 use serde::de::Visitor;
+#[cfg(feature = "formater")]
 use serde::Deserialize;
+#[cfg(feature = "formater")]
 use serde::Serialize;
 use thiserror::Error;
 
 /// A point in time.
 ///
 /// Low overhead time representation. Internally represented as milliseconds.
-#[derive(
-    Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Serialize, Deref, From, Into,
-)]
+#[derive(Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Deref, From, Into)]
+#[cfg_attr(feature = "formater", derive(Serialize))]
 pub struct Time(i64);
 
 impl Time {
@@ -107,6 +105,7 @@ impl Time {
         Time::millis(hours * Self::HOUR.0)
     }
 
+    #[cfg(feature = "formater")]
     /// Returns an RFC 3339 and ISO 8601 date and time string such as
     /// 1996-12-19T16:39:57+00:00.
     ///
@@ -122,6 +121,7 @@ impl Time {
         self.format("%Y-%m-%dT%H:%M:%S+00:00").to_string()
     }
 
+    #[cfg(feature = "formater")]
     /// The function format string is forwarded to
     /// [`chrono::NaiveDateTime::format()`]
     ///
@@ -133,7 +133,10 @@ impl Time {
     /// use tinytime::Time;
     /// assert_eq!("∞", Time::MAX.format("whatever").to_string());
     /// ```
-    pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
+    pub fn format<'a>(
+        &self,
+        fmt: &'a str,
+    ) -> chrono::format::DelayedFormat<chrono::format::StrftimeItems<'a>> {
         let secs = self.0 / 1000;
         let nanos = (self.0 % 1000) * 1_000_000;
         // casting to u32 is safe here because it is guaranteed that the value is in
@@ -145,13 +148,18 @@ impl Time {
             nanos.unsigned_abs()
         } as u32;
 
-        let t = NaiveDateTime::from_timestamp_opt(secs, nanos);
+        let t = chrono::NaiveDateTime::from_timestamp_opt(secs, nanos);
         match t {
-            None => DelayedFormat::new(None, None, StrftimeItems::new("∞")),
+            None => chrono::format::DelayedFormat::new(
+                None,
+                None,
+                chrono::format::StrftimeItems::new("∞"),
+            ),
             Some(v) => v.format(fmt),
         }
     }
 
+    #[cfg(feature = "formater")]
     /// Parses an RFC 3339 date and time string into a [Time] instance.
     ///
     /// The parsing is forwarded to [`chrono::DateTime::parse_from_rfc3339()`].
@@ -167,7 +175,7 @@ impl Time {
     /// );
     /// ```
     pub fn parse_from_rfc3339(s: &str) -> Result<Time, chrono::ParseError> {
-        DateTime::parse_from_rfc3339(s)
+        chrono::DateTime::parse_from_rfc3339(s)
             .map(|chrono_datetime| Time::millis(chrono_datetime.timestamp_millis()))
     }
 
@@ -260,6 +268,7 @@ impl Time {
     }
 }
 
+#[cfg(feature = "formater")]
 impl Display for Time {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let rfc3339_string = self.to_rfc3339();
@@ -278,6 +287,7 @@ impl TryFrom<Duration> for Time {
     }
 }
 
+#[cfg(feature = "formater")]
 /// Allows deserializing from RFC 3339 strings and unsigned integers.
 impl<'de> Deserialize<'de> for Time {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -288,8 +298,9 @@ impl<'de> Deserialize<'de> for Time {
     }
 }
 
+#[cfg(feature = "formater")]
 struct TimeVisitor;
-
+#[cfg(feature = "formater")]
 impl<'de> Visitor<'de> for TimeVisitor {
     type Value = Time;
 
@@ -385,7 +396,8 @@ pub enum TimeWindowError {
 /// Debug-asserts ensure that start <= end.
 /// If compiled in release mode, the invariant of start <= end is maintained, by
 /// correcting invalid use of the API (and setting end to start).
-#[derive(Clone, Debug, Eq, PartialEq, Default, Copy, Serialize, Deserialize, From, Into, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Copy, From, Into, Hash)]
+#[cfg_attr(feature = "formater", derive(Serialize, Deserialize))]
 pub struct TimeWindow {
     start: Time,
     end: Time,
@@ -831,22 +843,9 @@ impl TimeWindow {
 /// Duration can be negative. Internally duration is represented as
 /// milliseconds.
 #[derive(
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    Copy,
-    Clone,
-    Debug,
-    Default,
-    Hash,
-    Serialize,
-    Deref,
-    From,
-    Into,
-    Sum,
-    Neg,
+    Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug, Default, Hash, Deref, From, Into, Sum, Neg,
 )]
+#[cfg_attr(feature = "formater", derive(Serialize))]
 pub struct Duration(i64);
 
 impl Duration {
@@ -1320,13 +1319,11 @@ impl From<std::time::Duration> for Duration {
 /// );
 /// ```
 impl FromStr for Duration {
-    const REGEX: &str = r"^(?P<sign>-)?((?P<h>\d+)h)?((?P<m>\d+)m)?((?P<s>\d+)s)?((?P<ms>\d+)ms)?$";
-
     type Err = DurationParseError;
 
     fn from_str(seconds: &str) -> Result<Self, Self::Err> {
         lazy_static! {
-            static ref RE: Regex = Regex::new(Self::REGEX).unwrap();
+            static ref RE: Regex = Regex::new(DURATION_REGEX).unwrap();
         }
         let captures = RE
             .captures(seconds)
@@ -1351,6 +1348,10 @@ impl FromStr for Duration {
     }
 }
 
+#[cfg(feature = "parser")]
+const DURATION_REGEX: &str =
+    r"^(?P<sign>-)?((?P<h>\d+)h)?((?P<m>\d+)m)?((?P<s>\d+)s)?((?P<ms>\d+)ms)?$";
+
 #[derive(Debug)]
 pub enum DurationParseError {
     UnrecognizedFormat,
@@ -1372,6 +1373,7 @@ mod time_test {
     use crate::Duration;
     use crate::Time;
 
+    #[cfg(feature = "formater")]
     #[test]
     fn test_display() {
         struct TestCase {
