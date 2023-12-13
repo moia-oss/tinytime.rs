@@ -66,11 +66,11 @@ use derive_more::Sum;
 use lazy_static::lazy_static;
 #[cfg(feature = "parser")]
 use regex::Regex;
-#[cfg(feature = "formater")]
+#[cfg(feature = "formatter")]
 use serde::de::Visitor;
-#[cfg(feature = "formater")]
+#[cfg(feature = "formatter")]
 use serde::Deserialize;
-#[cfg(feature = "formater")]
+#[cfg(feature = "formatter")]
 use serde::Serialize;
 use thiserror::Error;
 
@@ -78,7 +78,7 @@ use thiserror::Error;
 ///
 /// Low overhead time representation. Internally represented as milliseconds.
 #[derive(Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Deref, From, Into)]
-#[cfg_attr(feature = "formater", derive(Serialize))]
+#[cfg_attr(feature = "formatter", derive(Serialize))]
 pub struct Time(i64);
 
 impl Time {
@@ -105,7 +105,7 @@ impl Time {
         Time::millis(hours * Self::HOUR.0)
     }
 
-    #[cfg(feature = "formater")]
+    #[cfg(feature = "formatter")]
     /// Returns an RFC 3339 and ISO 8601 date and time string such as
     /// 1996-12-19T16:39:57+00:00.
     ///
@@ -121,7 +121,7 @@ impl Time {
         self.format("%Y-%m-%dT%H:%M:%S+00:00").to_string()
     }
 
-    #[cfg(feature = "formater")]
+    #[cfg(feature = "formatter")]
     /// The function format string is forwarded to
     /// [`chrono::NaiveDateTime::format()`]
     ///
@@ -159,7 +159,7 @@ impl Time {
         }
     }
 
-    #[cfg(feature = "formater")]
+    #[cfg(feature = "formatter")]
     /// Parses an RFC 3339 date and time string into a [Time] instance.
     ///
     /// The parsing is forwarded to [`chrono::DateTime::parse_from_rfc3339()`].
@@ -268,7 +268,7 @@ impl Time {
     }
 }
 
-#[cfg(feature = "formater")]
+#[cfg(feature = "formatter")]
 impl Display for Time {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let rfc3339_string = self.to_rfc3339();
@@ -287,7 +287,7 @@ impl TryFrom<Duration> for Time {
     }
 }
 
-#[cfg(feature = "formater")]
+#[cfg(feature = "formatter")]
 /// Allows deserializing from RFC 3339 strings and unsigned integers.
 impl<'de> Deserialize<'de> for Time {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -298,9 +298,9 @@ impl<'de> Deserialize<'de> for Time {
     }
 }
 
-#[cfg(feature = "formater")]
+#[cfg(feature = "formatter")]
 struct TimeVisitor;
-#[cfg(feature = "formater")]
+#[cfg(feature = "formatter")]
 impl<'de> Visitor<'de> for TimeVisitor {
     type Value = Time;
 
@@ -397,7 +397,7 @@ pub enum TimeWindowError {
 /// If compiled in release mode, the invariant of start <= end is maintained, by
 /// correcting invalid use of the API (and setting end to start).
 #[derive(Clone, Debug, Eq, PartialEq, Default, Copy, From, Into, Hash)]
-#[cfg_attr(feature = "formater", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "formatter", derive(Serialize, Deserialize))]
 pub struct TimeWindow {
     start: Time,
     end: Time,
@@ -845,7 +845,7 @@ impl TimeWindow {
 #[derive(
     Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug, Default, Hash, Deref, From, Into, Sum, Neg,
 )]
-#[cfg_attr(feature = "formater", derive(Serialize))]
+#[cfg_attr(feature = "formatter", derive(Serialize))]
 pub struct Duration(i64);
 
 impl Duration {
@@ -1373,7 +1373,7 @@ mod time_test {
     use crate::Duration;
     use crate::Time;
 
-    #[cfg(feature = "formater")]
+    #[cfg(feature = "formatter")]
     #[test]
     fn test_display() {
         struct TestCase {

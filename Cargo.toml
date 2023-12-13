@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 
 [features]
 parser = ["dep:regex", "dep:lazy_static"]
-formater = ["dep:chrono", "dep:serde"]
+formatter = ["dep:chrono", "dep:serde"]
 
 [dependencies]
 chrono = { version = "0.4.31", optional = true }
