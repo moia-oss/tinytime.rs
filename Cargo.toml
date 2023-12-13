@@ -9,13 +9,13 @@ version = "0.9.3"
 license = "MIT OR Apache-2.0"
 
 [features]
-parser = ["dep:regex"]
+parser = ["dep:regex", "dep:lazy_static"]
 
 [dependencies]
 chrono = "0.4.31"
 derive_more = "0.99.17"
-lazy_static = "1.4.0"
-regex = {version = "1.10.2", optional=true}
+lazy_static = { version = "1.4.0", optional = true }
+regex = { version = "1.10.2", optional = true }
 serde = { version = "1.0.193", features = ["derive"], default-features = false }
 thiserror = "1.0.50"
 
