@@ -53,6 +53,7 @@ use std::ops::Mul;
 use std::ops::MulAssign;
 use std::ops::Sub;
 use std::ops::SubAssign;
+#[cfg(feature = "parser")]
 use std::str::FromStr;
 
 use chrono::format::DelayedFormat;
@@ -64,7 +65,9 @@ use derive_more::From;
 use derive_more::Into;
 use derive_more::Neg;
 use derive_more::Sum;
+#[cfg(feature = "parser")]
 use lazy_static::lazy_static;
+#[cfg(feature = "parser")]
 use regex::Regex;
 use serde::de::Visitor;
 use serde::Deserialize;
@@ -912,6 +915,7 @@ impl Duration {
     }
 }
 
+#[cfg(feature = "parser")]
 /// Allows deserializing from strings, unsigned integers, and signed integers.
 impl<'de> Deserialize<'de> for Duration {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -934,8 +938,9 @@ impl PartialOrd<std::time::Duration> for Duration {
     }
 }
 
+#[cfg(feature = "parser")]
 struct DurationVisitor;
-
+#[cfg(feature = "parser")]
 impl<'de> Visitor<'de> for DurationVisitor {
     type Value = Duration;
 
@@ -1276,6 +1281,7 @@ impl From<std::time::Duration> for Duration {
     }
 }
 
+#[cfg(feature = "parser")]
 /// Parses Duration from str
 ///
 /// # Example
@@ -1301,11 +1307,13 @@ impl From<std::time::Duration> for Duration {
 /// );
 /// ```
 impl FromStr for Duration {
+    const REGEX: &str = r"^(?P<sign>-)?((?P<h>\d+)h)?((?P<m>\d+)m)?((?P<s>\d+)s)?((?P<ms>\d+)ms)?$";
+
     type Err = DurationParseError;
 
     fn from_str(seconds: &str) -> Result<Self, Self::Err> {
         lazy_static! {
-            static ref RE: Regex = Regex::new(REGEX).unwrap();
+            static ref RE: Regex = Regex::new(Self::REGEX).unwrap();
         }
         let captures = RE
             .captures(seconds)
@@ -1346,13 +1354,8 @@ impl Display for DurationParseError {
     }
 }
 
-const REGEX: &str = r"^(?P<sign>-)?((?P<h>\d+)h)?((?P<m>\d+)m)?((?P<s>\d+)s)?((?P<ms>\d+)ms)?$";
-
 #[cfg(test)]
 mod time_test {
-    use serde_test::assert_de_tokens;
-    use serde_test::Token;
-
     use crate::Duration;
     use crate::Time;
 
@@ -1485,8 +1488,11 @@ mod time_test {
         }
     }
 
+    #[cfg(feature = "parser")]
     #[test]
     fn deserialize_time() {
+        use serde_test::assert_de_tokens;
+        use serde_test::Token;
         // strings
         assert_de_tokens(&Time::seconds(7), &[Token::Str("1970-01-01T00:00:07Z")]);
         assert_de_tokens(&Time::seconds(7), &[Token::String("1970-01-01T00:00:07Z")]);
@@ -1546,8 +1552,6 @@ mod time_test {
 
 #[cfg(test)]
 mod duration_test {
-    use serde_test::assert_de_tokens;
-    use serde_test::Token;
 
     use super::*;
 
@@ -1701,8 +1705,11 @@ mod duration_test {
         assert_eq!(Duration::minutes(-4), time2 - time);
     }
 
+    #[cfg(feature = "parser")]
     #[test]
     fn deserialize_duration() {
+        use serde_test::assert_de_tokens;
+        use serde_test::Token;
         // strings
         assert_de_tokens(&Duration::minutes(7), &[Token::Str("7m")]);
         assert_de_tokens(
