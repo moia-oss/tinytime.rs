@@ -834,7 +834,6 @@ impl TimeWindow {
     PartialOrd,
     Copy,
     Clone,
-    Debug,
     Default,
     Hash,
     Serialize,
@@ -1024,6 +1023,12 @@ impl Display for Duration {
         }
 
         write!(f, "{string}")
+    }
+}
+
+impl fmt::Debug for Duration {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(self, f)
     }
 }
 
