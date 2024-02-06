@@ -823,6 +823,12 @@ impl TimeWindow {
     }
 }
 
+impl Display for TimeWindow {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}, {}]", self.start, self.end)
+    }
+}
+
 /// A duration of time.
 ///
 /// Duration can be negative. Internally duration is represented as
@@ -1588,6 +1594,12 @@ mod duration_test {
 
         assert_eq!("0ms", Duration::ZERO.to_string());
         assert_eq!("-1m1s", Duration::seconds(-61).to_string());
+    }
+
+    #[test]
+    fn test_time_window_display() {
+        assert_eq!("[1970-01-01T00:00:00+00:00, ∞]", TimeWindow::new(Time::EPOCH, Time::MAX).to_string());
+        assert_eq!("[1970-01-01T01:00:00+00:00, 2024-02-06T16:53:47+00:00]", TimeWindow::new(Time::hours(1), Time::millis(1707238427962)).to_string());
     }
 
     #[test]
