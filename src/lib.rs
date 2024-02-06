@@ -1598,8 +1598,14 @@ mod duration_test {
 
     #[test]
     fn test_time_window_display() {
-        assert_eq!("[1970-01-01T00:00:00+00:00, ∞]", TimeWindow::new(Time::EPOCH, Time::MAX).to_string());
-        assert_eq!("[1970-01-01T01:00:00+00:00, 2024-02-06T16:53:47+00:00]", TimeWindow::new(Time::hours(1), Time::millis(1707238427962)).to_string());
+        assert_eq!(
+            "[1970-01-01T00:00:00+00:00, ∞]",
+            TimeWindow::new(Time::EPOCH, Time::MAX).to_string()
+        );
+        assert_eq!(
+            "[1970-01-01T01:00:00+00:00, 2024-02-06T16:53:47+00:00]",
+            TimeWindow::new(Time::hours(1), Time::millis(1707238427962)).to_string()
+        );
     }
 
     #[test]
