@@ -88,18 +88,22 @@ impl Time {
     const MINUTE: Time = Time(60 * Self::SECOND.0);
     const HOUR: Time = Time(60 * Self::MINUTE.0);
 
+    #[must_use]
     pub const fn millis(millis: i64) -> Self {
         Time(millis)
     }
 
+    #[must_use]
     pub const fn seconds(seconds: i64) -> Self {
         Time::millis(seconds * Self::SECOND.0)
     }
 
+    #[must_use]
     pub const fn minutes(minutes: i64) -> Self {
         Time::millis(minutes * Self::MINUTE.0)
     }
 
+    #[must_use]
     pub const fn hours(hours: i64) -> Self {
         Time::millis(hours * Self::HOUR.0)
     }
@@ -115,6 +119,7 @@ impl Time {
     /// use tinytime::Time;
     /// assert_eq!("∞", Time::MAX.to_rfc3339());
     /// ```
+    #[must_use]
     pub fn to_rfc3339(self) -> String {
         self.format("%Y-%m-%dT%H:%M:%S+00:00").to_string()
     }
@@ -130,6 +135,7 @@ impl Time {
     /// use tinytime::Time;
     /// assert_eq!("∞", Time::MAX.format("whatever").to_string());
     /// ```
+    #[must_use]
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
         let secs = self.0 / 1000;
         let nanos = (self.0 % 1000) * 1_000_000;
@@ -172,10 +178,12 @@ impl Time {
     ///
     /// Don't use this method to compare if the current time has passed a
     /// certain deadline.
+    #[must_use]
     pub fn now() -> Time {
         Time::from(SystemTime::now())
     }
 
+    #[must_use]
     pub fn as_millis(&self) -> i64 {
         self.0
     }
@@ -196,6 +204,7 @@ impl Time {
     ///     Time::minutes(5)
     /// );
     /// ```
+    #[must_use]
     pub fn round_down(&self, step_size: Duration) -> Time {
         let time_milli = self.as_millis();
         let part = time_milli % step_size.as_millis().abs();
@@ -218,6 +227,7 @@ impl Time {
     ///     Time::minutes(5)
     /// );
     /// ```
+    #[must_use]
     pub fn round_up(&self, step_size: Duration) -> Time {
         let time_milli = self.as_millis();
         let step_milli = step_size.as_millis().abs();
@@ -243,6 +253,7 @@ impl Time {
     ///     Some(Time::EPOCH)
     /// );
     /// ```
+    #[must_use]
     pub fn checked_sub(&self, rhs: Duration) -> Option<Self> {
         // check for overflow
         if Time::EPOCH + rhs > *self {
@@ -252,13 +263,14 @@ impl Time {
         }
     }
 
+    #[must_use]
     pub fn since_epoch(&self) -> Duration {
         Duration::millis(self.as_millis())
     }
 }
 
 impl Display for Time {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let rfc3339_string = self.to_rfc3339();
         write!(f, "{rfc3339_string}")
     }
@@ -290,7 +302,7 @@ struct TimeVisitor;
 impl<'de> Visitor<'de> for TimeVisitor {
     type Value = Time;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
         formatter.write_str("either a Time newtype, an RFC 3339 string, or an unsigned integer indicating epoch milliseconds")
     }
 
@@ -320,7 +332,7 @@ impl<'de> Visitor<'de> for TimeVisitor {
     }
 }
 
-impl From<Time> for std::time::SystemTime {
+impl From<Time> for SystemTime {
     fn from(input: Time) -> Self {
         debug_assert!(
             input.0 >= 0,
@@ -333,8 +345,8 @@ impl From<Time> for std::time::SystemTime {
     }
 }
 
-impl From<std::time::SystemTime> for Time {
-    fn from(input: std::time::SystemTime) -> Self {
+impl From<SystemTime> for Time {
+    fn from(input: SystemTime) -> Self {
         if input > SystemTime::UNIX_EPOCH {
             let std_dur = input.duration_since(SystemTime::UNIX_EPOCH).unwrap();
             Self::millis(Duration::from(std_dur).as_millis())
@@ -362,17 +374,17 @@ impl Debug for Time {
         if !positive {
             f.write_str("-")?;
         }
-        write!(f, "{:02}:", hours_part)?;
-        write!(f, "{:02}:", minutes_part)?;
-        write!(f, "{:02}", seconds_part)?;
+        write!(f, "{hours_part:02}:")?;
+        write!(f, "{minutes_part:02}:")?;
+        write!(f, "{seconds_part:02}")?;
         if millis_part > 0 {
-            write!(f, ".{:03}", millis_part)?;
+            write!(f, ".{millis_part:03}")?;
         }
         Ok(())
     }
 }
 
-#[derive(Error, Debug, Eq, PartialEq)]
+#[derive(Error, Debug, Eq, PartialEq, Clone, Copy)]
 pub enum TimeWindowError {
     #[error("time window start is after end")]
     StartAfterEnd,
@@ -392,6 +404,7 @@ impl TimeWindow {
     /// Constructs a new [`TimeWindow`].
     /// `debug_asserts` that `start < end`. Sets end to `start` in release mode
     /// if `start > end`.
+    #[must_use]
     pub fn new(start: Time, end: Time) -> Self {
         debug_assert!(start <= end);
         TimeWindow {
@@ -423,14 +436,17 @@ impl TimeWindow {
     }
 
     /// Returns [`TimeWindow`] with range [[`Time::EPOCH`], `end`)
+    #[must_use]
     pub fn epoch_to(end: Time) -> Self {
         Self::new(Time::EPOCH, end)
     }
 
+    #[must_use]
     pub fn from_minutes(a: i64, b: i64) -> Self {
         TimeWindow::new(Time::minutes(a), Time::minutes(b))
     }
 
+    #[must_use]
     pub fn from_seconds(a: i64, b: i64) -> Self {
         TimeWindow::new(Time::seconds(a), Time::seconds(b))
     }
@@ -446,6 +462,7 @@ impl TimeWindow {
     /// assert_eq!(Time::seconds(1), x.start());
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
+    #[must_use]
     pub fn from_duration(start: Time, duration: Duration) -> Self {
         TimeWindow::new(start, start.add(duration))
     }
@@ -461,10 +478,12 @@ impl TimeWindow {
     /// assert_eq!(Time::seconds(1), x.start());
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
+    #[must_use]
     pub fn from_end(duration: Duration, end: Time) -> Self {
         TimeWindow::new(end.sub(duration), end)
     }
 
+    #[must_use]
     pub const fn instant(time: Time) -> Self {
         TimeWindow {
             start: time,
@@ -472,6 +491,7 @@ impl TimeWindow {
         }
     }
 
+    #[must_use]
     pub fn widest() -> Self {
         TimeWindow {
             start: Time::EPOCH,
@@ -479,26 +499,32 @@ impl TimeWindow {
         }
     }
 
+    #[must_use]
     pub fn instant_seconds(seconds: i64) -> Self {
         TimeWindow::from_seconds(seconds, seconds)
     }
 
+    #[must_use]
     pub const fn start(&self) -> Time {
         self.start
     }
 
+    #[must_use]
     pub const fn end(&self) -> Time {
         self.end
     }
 
+    #[must_use]
     pub fn duration(&self) -> Duration {
         self.end - self.start
     }
 
+    #[must_use]
     pub fn with_new_start(self, start: Time) -> TimeWindow {
         TimeWindow::new(start, self.end)
     }
 
+    #[must_use]
     pub fn with_new_end(self, end: Time) -> TimeWindow {
         TimeWindow::new(self.start, end)
     }
@@ -518,6 +544,7 @@ impl TimeWindow {
     /// assert_eq!(None, x.extend_start(Time::seconds(6)));
     /// assert_eq!(Time::seconds(3), x.start());
     /// ```
+    #[must_use]
     pub fn extend_start(&mut self, new_start: Time) -> Option<Duration> {
         (new_start < self.start).then(|| {
             let diff = self.start - new_start;
@@ -541,6 +568,7 @@ impl TimeWindow {
     /// assert_eq!(None, x.extend_end(Time::EPOCH));
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
+    #[must_use]
     pub fn extend_end(&mut self, new_end: Time) -> Option<Duration> {
         (new_end > self.end).then(|| {
             let diff = new_end - self.end;
@@ -561,6 +589,7 @@ impl TimeWindow {
     /// let y = x.extend_start_by(Duration::seconds(3));
     /// assert_eq!(Time::seconds(5), y.start());
     /// ```
+    #[must_use]
     pub fn extend_start_by(&self, duration: Duration) -> TimeWindow {
         TimeWindow {
             start: self.start - duration,
@@ -580,6 +609,7 @@ impl TimeWindow {
     /// let y = x.extend_end_by(Duration::seconds(3));
     /// assert_eq!(Time::seconds(5), y.end());
     /// ```
+    #[must_use]
     pub fn extend_end_by(&self, duration: Duration) -> TimeWindow {
         TimeWindow {
             start: self.start,
@@ -665,6 +695,7 @@ impl TimeWindow {
     ///     x.shrink_towards_end_to(Duration::seconds(5))
     /// );
     /// ```
+    #[must_use]
     pub fn shrink_towards_end_to(self, new_duration: Duration) -> TimeWindow {
         let duration = new_duration
             .min(self.duration()) // Resize only if new duration is smaller than the current one
@@ -699,6 +730,7 @@ impl TimeWindow {
     ///     x.shrink_towards_start_to(Duration::seconds(5))
     /// );
     /// ```
+    #[must_use]
     pub fn shrink_towards_start_to(self, new_duration: Duration) -> TimeWindow {
         let duration = new_duration
             .min(self.duration()) // Resize only if new duration is smaller than the current one
@@ -719,6 +751,7 @@ impl TimeWindow {
     /// assert!(x.contains(Time::seconds(10)));
     /// assert!(!x.contains(Time::seconds(11)));
     /// ```
+    #[must_use]
     pub fn contains(&self, that: Time) -> bool {
         self.start <= that && that <= self.end
     }
@@ -739,6 +772,7 @@ impl TimeWindow {
     /// assert!(!x.overlaps(&TimeWindow::from_seconds(10, 15)));
     /// assert!(!x.overlaps(&TimeWindow::from_seconds(11, 15)));
     /// ```
+    #[must_use]
     pub fn overlaps(&self, that: &TimeWindow) -> bool {
         self.start < that.end && that.start < self.end
     }
@@ -794,6 +828,7 @@ impl TimeWindow {
     ///     "that is after x"
     /// );
     /// ```
+    #[must_use]
     pub fn intersect(&self, that: &TimeWindow) -> Option<TimeWindow> {
         let start = max(self.start, that.start);
         let end = min(self.end, that.end);
@@ -824,7 +859,7 @@ impl TimeWindow {
 }
 
 impl Display for TimeWindow {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "[{}, {}]", self.start, self.end)
     }
 }
@@ -860,25 +895,30 @@ impl Duration {
     const HOUR: Duration = Duration(60 * Self::MINUTE.0);
 
     /// Create a duration instance from hours
+    #[must_use]
     pub const fn hours(hours: i64) -> Self {
         Duration(hours * Self::HOUR.0)
     }
 
     /// Create a duration instance from minutes.
+    #[must_use]
     pub const fn minutes(minutes: i64) -> Self {
         Duration(minutes * Self::MINUTE.0)
     }
 
     /// Create a duration instance from seconds.
+    #[must_use]
     pub const fn seconds(seconds: i64) -> Self {
         Duration(seconds * Self::SECOND.0)
     }
 
     /// Create a duration instance from ms.
+    #[must_use]
     pub const fn millis(ms: i64) -> Self {
         Duration(ms)
     }
 
+    #[must_use]
     pub fn abs(&self) -> Self {
         if self >= &Duration::ZERO {
             *self
@@ -887,12 +927,14 @@ impl Duration {
         }
     }
     /// Returns the number of whole milliseconds in the Duration instance.
+    #[must_use]
     pub fn as_millis(&self) -> i64 {
         self.0
     }
 
     /// Returns the number of non-negative whole milliseconds in the Duration
     /// instance.
+    #[must_use]
     pub fn as_millis_unsigned(&self) -> u64 {
         #[allow(clippy::cast_sign_loss)]
         {
@@ -901,12 +943,14 @@ impl Duration {
     }
 
     /// Returns the number of whole seconds in the Duration instance.
+    #[must_use]
     pub const fn as_seconds(&self) -> i64 {
         self.0 / Self::SECOND.0
     }
 
     /// Returns the number of non-negative whole seconds in the Duration
     /// instance.
+    #[must_use]
     pub fn as_seconds_unsigned(&self) -> u64 {
         #[allow(clippy::cast_sign_loss)]
         {
@@ -915,16 +959,19 @@ impl Duration {
     }
 
     /// Returns the number of whole minutes in the Duration instance.
+    #[must_use]
     pub const fn as_minutes(&self) -> i64 {
         self.0 / Self::MINUTE.0
     }
 
     /// Returns true if duration is `>= 0`.
+    #[must_use]
     pub const fn is_non_negative(&self) -> bool {
         self.0 >= 0
     }
 
     /// Returns true if duration is `> 0`.
+    #[must_use]
     pub const fn is_positive(&self) -> bool {
         self.0 > 0
     }
@@ -957,7 +1004,7 @@ struct DurationVisitor;
 impl<'de> Visitor<'de> for DurationVisitor {
     type Value = Duration;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
         formatter.write_str(
             "either a Duration newtype, an (signed or unsigned) integer indicating milliseconds, or a duration string",
         )
@@ -997,7 +1044,7 @@ impl<'de> Visitor<'de> for DurationVisitor {
 }
 
 impl Display for Duration {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if self.0 == 0 {
             return write!(f, "0ms");
         }
@@ -1032,8 +1079,8 @@ impl Display for Duration {
     }
 }
 
-impl fmt::Debug for Duration {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl Debug for Duration {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         fmt::Display::fmt(self, f)
     }
 }
@@ -1109,7 +1156,7 @@ impl SubAssign<Duration> for Time {
             self.0.checked_sub(rhs.0).is_some(),
             "overflow detected: {self:?} -= {rhs:?}"
         );
-        self.0 -= rhs.0
+        self.0 -= rhs.0;
     }
 }
 
@@ -1194,8 +1241,8 @@ impl Div<f64> for Duration {
     type Output = Duration;
 
     fn div(self, rhs: f64) -> Self::Output {
-        debug_assert_ne!(
-            rhs, 0.0,
+        debug_assert!(
+            rhs.abs() > f64::EPSILON,
             "Dividing by zero results in INF. This is probably not what you want."
         );
         #[allow(clippy::cast_possible_truncation)]
@@ -1240,7 +1287,7 @@ impl MulAssign<i64> for Duration {
             self.0.checked_mul(rhs).is_some(),
             "overflow detected: {self:?} *= {rhs:?}"
         );
-        self.0 *= rhs
+        self.0 *= rhs;
     }
 }
 
@@ -1256,7 +1303,7 @@ impl Div<i64> for Duration {
 impl DivAssign<i64> for Duration {
     fn div_assign(&mut self, rhs: i64) {
         // forward to the float implementation
-        self.div_assign(rhs as f64)
+        self.div_assign(rhs as f64);
     }
 }
 
@@ -1354,7 +1401,7 @@ impl FromStr for Duration {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum DurationParseError {
     UnrecognizedFormat,
 }
@@ -1362,7 +1409,7 @@ pub enum DurationParseError {
 impl Error for DurationParseError {}
 
 impl Display for DurationParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "Unrecognized Duration format, valid examples are '2h3s', '1m', '1h3m5s700ms'"
@@ -1604,7 +1651,7 @@ mod duration_test {
         );
         assert_eq!(
             "[1970-01-01T01:00:00+00:00, 2024-02-06T16:53:47+00:00]",
-            TimeWindow::new(Time::hours(1), Time::millis(1707238427962)).to_string()
+            TimeWindow::new(Time::hours(1), Time::millis(1_707_238_427_962)).to_string()
         );
     }
 

@@ -19,3 +19,45 @@ thiserror = "1.0.50"
 [dev-dependencies]
 serde_test = "1.0.176"
 serde_json = "1.0.108"
+
+[lints.rust]
+macro_use_extern_crate = "warn"
+meta_variable_misuse = "warn"
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"
+missing_docs = "allow" # TODO
+single_use_lifetimes = "warn"
+unreachable_pub = "warn"
+unsafe_code = "deny"
+unstable_features = "deny"
+unused_crate_dependencies = "warn"
+unused_extern_crates = "warn"
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+unused_macro_rules = "warn"
+unused_qualifications = "warn"
+unused_results = "warn"
+unused_tuple_struct_fields = "warn"
+unused = "warn"
+
+[lints.rustdoc]
+broken_intra_doc_links = "deny"
+missing_crate_level_docs = "warn"
+
+[lints.clippy]
+cargo = "allow" # TODO
+complexity = "warn"
+correctness = "deny"
+perf = "warn"
+style = "warn"
+suspicious = "deny"
+todo = "warn"
+
+### Pedantic
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow" # TODO
+cast_precision_loss = "allow" 
+cast_possible_truncation = "allow"
+cast_lossless = "allow"
+cast_possible_wrap = "allow"
+cast_sign_loss = "allow"
