@@ -184,7 +184,7 @@ impl Time {
     }
 
     #[must_use]
-    pub fn as_millis(&self) -> i64 {
+    pub const fn as_millis(&self) -> i64 {
         self.0
     }
 
@@ -205,7 +205,7 @@ impl Time {
     /// );
     /// ```
     #[must_use]
-    pub fn round_down(&self, step_size: Duration) -> Time {
+    pub const fn round_down(&self, step_size: Duration) -> Time {
         let time_milli = self.as_millis();
         let part = time_milli % step_size.as_millis().abs();
         Time::millis(time_milli - part)
@@ -228,7 +228,7 @@ impl Time {
     /// );
     /// ```
     #[must_use]
-    pub fn round_up(&self, step_size: Duration) -> Time {
+    pub const fn round_up(&self, step_size: Duration) -> Time {
         let time_milli = self.as_millis();
         let step_milli = step_size.as_millis().abs();
         let part = time_milli % step_milli;
@@ -264,7 +264,7 @@ impl Time {
     }
 
     #[must_use]
-    pub fn since_epoch(&self) -> Duration {
+    pub const fn since_epoch(&self) -> Duration {
         Duration::millis(self.as_millis())
     }
 }
@@ -928,7 +928,7 @@ impl Duration {
     }
     /// Returns the number of whole milliseconds in the Duration instance.
     #[must_use]
-    pub fn as_millis(&self) -> i64 {
+    pub const fn as_millis(&self) -> i64 {
         self.0
     }
 
