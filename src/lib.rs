@@ -418,9 +418,7 @@ impl TimeWindow {
     ///
     /// # Examples
     /// ```
-    /// # use tinytime::{Duration, TimeWindowError};
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
+    /// # use tinytime::*;
     /// assert!(TimeWindow::new_checked(Time::hours(1), Time::hours(2)).is_ok());
     /// assert_eq!(
     ///     Err(TimeWindowError::StartAfterEnd),
@@ -451,36 +449,32 @@ impl TimeWindow {
         TimeWindow::new(Time::seconds(a), Time::seconds(b))
     }
 
-    /// Creates time window from start time and duration.
-    /// # Examples
+    /// Creates time window from start time and length.
     ///
+    /// # Examples
     /// ```
-    /// # use tinytime::Duration;
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
-    /// let mut x = TimeWindow::from_duration(Time::seconds(1), Duration::seconds(2));
+    /// # use tinytime::*;
+    /// let mut x = TimeWindow::from_length_start(Time::seconds(1), Duration::seconds(2));
     /// assert_eq!(Time::seconds(1), x.start());
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
     #[must_use]
-    pub fn from_duration(start: Time, duration: Duration) -> Self {
-        TimeWindow::new(start, start.add(duration))
+    pub fn from_length_start(start: Time, length: Duration) -> Self {
+        TimeWindow::new(start, start.add(length))
     }
 
-    /// Creates time window from duration and end time.
-    /// # Examples
+    /// Creates time window from length and end time.
     ///
+    ///  # Examples
     /// ```
-    /// # use tinytime::Duration;
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
-    /// let mut x = TimeWindow::from_end(Duration::seconds(2), Time::seconds(3));
+    /// # use tinytime::*;
+    /// let mut x = TimeWindow::from_length_end(Duration::seconds(2), Time::seconds(3));
     /// assert_eq!(Time::seconds(1), x.start());
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
     #[must_use]
-    pub fn from_end(duration: Duration, end: Time) -> Self {
-        TimeWindow::new(end.sub(duration), end)
+    pub fn from_length_end(length: Duration, end: Time) -> Self {
+        TimeWindow::new(end.sub(length), end)
     }
 
     #[must_use]
@@ -515,228 +509,210 @@ impl TimeWindow {
     }
 
     #[must_use]
-    pub fn duration(&self) -> Duration {
+    pub fn length(&self) -> Duration {
         self.end - self.start
     }
 
-    #[must_use]
-    pub fn with_new_start(self, start: Time) -> TimeWindow {
-        TimeWindow::new(start, self.end)
+    /// Changes the start of the `TimeWindow` to `new_start`. If `new_start` is
+    /// greater than or equal to `end` the start will be set equal to `end`.
+    pub fn set_start(&mut self, new_start: Time) {
+        self.start = new_start.min(self.end);
     }
 
-    #[must_use]
-    pub fn with_new_end(self, end: Time) -> TimeWindow {
-        TimeWindow::new(self.start, end)
+    /// Changes the end of the `TimeWindow` to `new_end`. If `new_end` is
+    /// smaller or equal to `start`, the `end` will be set to `start.`
+    pub fn set_end(&mut self, new_end: Time) {
+        self.end = new_end.max(self.start);
     }
 
-    /// Extends time window start to the given value. Is a No-Op when given
-    /// value isn't earlier than current time window start.
-    /// Returns by which duration the start was moved.
-    /// # Examples
+    /// Prepones time window start to the given value.
     ///
+    /// Is a no-op when the given value isn't earlier than current time window
+    /// start. Returns the duration of the preponement.
+    ///
+    /// # Examples
     /// ```
-    /// # use tinytime::Duration;
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
+    /// # use tinytime::*;
     /// let mut x = TimeWindow::from_seconds(4, 5);
-    /// assert_eq!(Some(Duration::seconds(1)), x.extend_start(Time::seconds(3)));
+    /// assert_eq!(
+    ///     Some(Duration::seconds(1)),
+    ///     x.prepone_start_to(Time::seconds(3))
+    /// );
     /// assert_eq!(Time::seconds(3), x.start());
-    /// assert_eq!(None, x.extend_start(Time::seconds(6)));
+    /// assert_eq!(None, x.prepone_start_to(Time::seconds(6)));
     /// assert_eq!(Time::seconds(3), x.start());
     /// ```
-    #[must_use]
-    pub fn extend_start(&mut self, new_start: Time) -> Option<Duration> {
+    pub fn prepone_start_to(&mut self, new_start: Time) -> Option<Duration> {
         (new_start < self.start).then(|| {
             let diff = self.start - new_start;
-            *self = self.with_new_start(new_start);
+            self.set_start(new_start);
             diff
         })
     }
 
-    /// Extends time window end to the given value. Is a No-Op when given value
-    /// isn't greater than current time window end.
-    /// Returns by which duration the deadline was extended.
-    /// # Examples
+    /// Postpones time window end to the given value.
     ///
+    /// Is a no-op when the given value isn't greater than current time window
+    /// end. Returns the duration of the postponement.
+    ///
+    /// # Examples
     /// ```
-    /// # use tinytime::Duration;
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
+    /// # use tinytime::*;
     /// let mut x = TimeWindow::from_seconds(1, 2);
-    /// assert_eq!(Some(Duration::seconds(1)), x.extend_end(Time::seconds(3)));
+    /// assert_eq!(
+    ///     Some(Duration::seconds(1)),
+    ///     x.postpone_end_to(Time::seconds(3))
+    /// );
     /// assert_eq!(Time::seconds(3), x.end());
-    /// assert_eq!(None, x.extend_end(Time::EPOCH));
+    /// assert_eq!(None, x.postpone_end_to(Time::EPOCH));
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
-    #[must_use]
-    pub fn extend_end(&mut self, new_end: Time) -> Option<Duration> {
+    pub fn postpone_end_to(&mut self, new_end: Time) -> Option<Duration> {
         (new_end > self.end).then(|| {
             let diff = new_end - self.end;
-            *self = self.with_new_end(new_end);
+            self.set_end(new_end);
             diff
         })
     }
 
-    /// Extends time window start by the given duration.
+    /// Prepones time window start by the given duration.
     ///
     /// # Examples
-    ///
     /// ```
-    /// # use tinytime::Duration;
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
-    /// let x = TimeWindow::from_seconds(8, 9);
-    /// let y = x.extend_start_by(Duration::seconds(3));
-    /// assert_eq!(Time::seconds(5), y.start());
+    /// # use tinytime::*;
+    /// let mut tw = TimeWindow::from_seconds(8, 9);
+    /// tw.prepone_start_by(Duration::seconds(3));
+    /// assert_eq!(Time::seconds(5), tw.start());
     /// ```
-    #[must_use]
-    pub fn extend_start_by(&self, duration: Duration) -> TimeWindow {
-        TimeWindow {
-            start: self.start - duration,
-            end: self.end,
-        }
+    pub fn prepone_start_by(&mut self, duration: Duration) {
+        self.start -= duration;
     }
 
-    /// Extends time window end by the given duration.
+    /// Postpones time window end by the given duration.
     ///
     /// # Examples
-    ///
     /// ```
-    /// # use tinytime::Duration;
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
-    /// let x = TimeWindow::from_seconds(1, 2);
-    /// let y = x.extend_end_by(Duration::seconds(3));
-    /// assert_eq!(Time::seconds(5), y.end());
+    /// # use tinytime::*;
+    /// let mut tw = TimeWindow::from_seconds(1, 2);
+    /// tw.postpone_end_by(Duration::seconds(3));
+    /// assert_eq!(Time::seconds(5), tw.end());
     /// ```
-    #[must_use]
-    pub fn extend_end_by(&self, duration: Duration) -> TimeWindow {
-        TimeWindow {
-            start: self.start,
-            end: self.end + duration,
-        }
+    pub fn postpone_end_by(&mut self, duration: Duration) {
+        self.end += duration;
     }
 
-    /// Postpones the time window start to the given value. Is a No-Op when
-    /// given value isn't greater than current time window start. Will never
-    /// postpone the start past the end of the time window.
-    /// # Examples
+    /// Postpones the time window start to the given value.
     ///
+    /// Is a no-op when the given value isn't greater than current time window
+    /// start. Will never postpone the start past the end of the time
+    /// window.
+    ///
+    /// # Examples
     /// ```
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
+    /// # use tinytime::*;
     /// let mut x = TimeWindow::from_seconds(1, 3);
-    /// x.shrink_towards_end(Time::EPOCH);
+    /// x.postpone_start_to(Time::EPOCH);
     /// assert_eq!(Time::seconds(1), x.start());
-    /// x.shrink_towards_end(Time::seconds(2));
+    /// x.postpone_start_to(Time::seconds(2));
     /// assert_eq!(Time::seconds(2), x.start());
-    /// x.shrink_towards_end(Time::seconds(4));
+    /// x.postpone_start_to(Time::seconds(4));
     /// assert_eq!(Time::seconds(3), x.start());
     /// ```
-    pub fn shrink_towards_end(&mut self, new_start: Time) {
+    pub fn postpone_start_to(&mut self, new_start: Time) {
         if new_start > self.start {
             if new_start > self.end {
-                *self = self.with_new_start(self.end);
+                self.set_start(self.end);
             } else {
-                *self = self.with_new_start(new_start);
+                self.set_start(new_start);
             }
         }
     }
 
-    /// Prepones the time window end to the given value. May be a No-Op.
-    /// Will never prepone the end more than to the start of the time window.
-    /// # Examples
+    /// Prepones the time window end to the given value.
     ///
+    /// May be a no-op. Will never prepone the end more than to the start of the
+    /// time window.
+    ///
+    /// # Examples
     /// ```
-    /// # use tinytime::Time;
-    /// # use tinytime::TimeWindow;
+    /// # use tinytime::*;
     /// let mut x = TimeWindow::from_seconds(1, 3);
-    /// x.shrink_towards_start(Time::seconds(4));
+    /// x.prepone_end_to(Time::seconds(4));
     /// assert_eq!(Time::seconds(3), x.end());
-    /// x.shrink_towards_start(Time::seconds(2));
+    /// x.prepone_end_to(Time::seconds(2));
     /// assert_eq!(Time::seconds(2), x.end());
-    /// x.shrink_towards_start(Time::EPOCH);
+    /// x.prepone_end_to(Time::EPOCH);
     /// assert_eq!(Time::seconds(1), x.end());
     /// ```
-    pub fn shrink_towards_start(&mut self, new_end: Time) {
+    pub fn prepone_end_to(&mut self, new_end: Time) {
         if new_end < self.end {
             if new_end < self.start {
-                *self = self.with_new_end(self.start);
+                self.set_end(self.start);
             } else {
-                *self = self.with_new_end(new_end);
+                self.set_end(new_end);
             }
         }
     }
 
-    /// Postpones the time window start so that the new duration matches the
-    /// given value. Is a No-Op if the new duration is smaller than the
-    /// current one. Negative durations set the result time window size to
-    /// zero.
+    /// Postpones the time window start so that the new length matches the
+    /// given value.
+    ///
+    /// Is a no-op if the new length is smaller than the current one. Negative
+    /// length will set the result time window size to zero.
     ///
     /// # Examples
     /// ```
-    /// # use tinytime::Duration;
-    /// # use tinytime::TimeWindow;
-    /// let x = TimeWindow::from_seconds(1, 3);
-    /// assert_eq!(
-    ///     TimeWindow::from_seconds(3, 3),
-    ///     x.shrink_towards_end_to(Duration::seconds(-1))
-    /// );
-    /// assert_eq!(
-    ///     TimeWindow::from_seconds(3, 3),
-    ///     x.shrink_towards_end_to(Duration::seconds(0))
-    /// );
-    /// assert_eq!(
-    ///     TimeWindow::from_seconds(2, 3),
-    ///     x.shrink_towards_end_to(Duration::seconds(1))
-    /// );
-    /// assert_eq!(
-    ///     TimeWindow::from_seconds(1, 3),
-    ///     x.shrink_towards_end_to(Duration::seconds(5))
-    /// );
+    /// # use tinytime::*;
+    /// let mut tw = TimeWindow::from_seconds(1, 3);
+    /// tw.postpone_start_shrink_to(Duration::seconds(-1));
+    /// assert_eq!(TimeWindow::from_seconds(3, 3), tw);
+    /// let mut tw = TimeWindow::from_seconds(1, 3);
+    /// tw.postpone_start_shrink_to(Duration::seconds(0));
+    /// assert_eq!(TimeWindow::from_seconds(3, 3), tw);
+    /// let mut tw = TimeWindow::from_seconds(1, 3);
+    /// tw.postpone_start_shrink_to(Duration::seconds(1));
+    /// assert_eq!(TimeWindow::from_seconds(2, 3), tw);
+    /// let mut tw = TimeWindow::from_seconds(1, 3);
+    /// tw.postpone_start_shrink_to(Duration::seconds(5));
+    /// assert_eq!(TimeWindow::from_seconds(1, 3), tw);
     /// ```
-    #[must_use]
-    pub fn shrink_towards_end_to(self, new_duration: Duration) -> TimeWindow {
-        let duration = new_duration
-            .min(self.duration()) // Resize only if new duration is smaller than the current one
-            .max(Duration::ZERO); // Make sure the new duration is non-negative
-
-        TimeWindow::from_end(duration, self.end)
+    pub fn postpone_start_shrink_to(&mut self, new_length: Duration) {
+        let length = new_length
+            .min(self.length()) // Resize only if new length is smaller than the current one
+            .max(Duration::ZERO); // Make sure the new length is non-negative
+        self.start = self.end - length;
     }
 
-    /// Prepones the time window end so that the new duration matches the given
-    /// value. Is a No-Op if the new duration is smaller than the current
-    /// one. Negative durations set the result time window size to zero.
+    /// Prepones the time window end so that the new length matches the given
+    /// value.
+    ///
+    /// Is a no-op if the new length is smaller than the current one. Negative
+    /// lengths set the time window size to zero.
     ///
     /// # Examples
     /// ```
-    /// # use tinytime::Duration;
-    /// # use tinytime::TimeWindow;
-    /// let x = TimeWindow::from_seconds(1, 3);
-    /// assert_eq!(
-    ///     TimeWindow::from_seconds(1, 1),
-    ///     x.shrink_towards_start_to(Duration::seconds(-1))
-    /// );
-    /// assert_eq!(
-    ///     TimeWindow::from_seconds(1, 1),
-    ///     x.shrink_towards_start_to(Duration::seconds(0))
-    /// );
-    /// assert_eq!(
-    ///     TimeWindow::from_seconds(1, 2),
-    ///     x.shrink_towards_start_to(Duration::seconds(1))
-    /// );
-    /// assert_eq!(
-    ///     TimeWindow::from_seconds(1, 3),
-    ///     x.shrink_towards_start_to(Duration::seconds(5))
-    /// );
+    /// # use tinytime::*;
+    /// let mut tw = TimeWindow::from_seconds(1, 3);
+    /// tw.prepone_end_shrink_to(Duration::seconds(-1));
+    /// assert_eq!(TimeWindow::from_seconds(1, 1), tw);
+    ///
+    /// let mut tw = TimeWindow::from_seconds(1, 3);
+    /// tw.prepone_end_shrink_to(Duration::seconds(0));
+    /// assert_eq!(TimeWindow::from_seconds(1, 1), tw);
+    ///
+    /// let mut tw = TimeWindow::from_seconds(1, 3);
+    /// tw.prepone_end_shrink_to(Duration::seconds(1));
+    /// assert_eq!(TimeWindow::from_seconds(1, 2), tw);
+    ///
+    /// let mut tw = TimeWindow::from_seconds(1, 3);
+    /// tw.prepone_end_shrink_to(Duration::seconds(5));
+    /// assert_eq!(TimeWindow::from_seconds(1, 3), tw);
     /// ```
-    #[must_use]
-    pub fn shrink_towards_start_to(self, new_duration: Duration) -> TimeWindow {
-        let duration = new_duration
-            .min(self.duration()) // Resize only if new duration is smaller than the current one
-            .max(Duration::ZERO); // Make sure the new duration is non-negative
-
-        TimeWindow::from_duration(self.start, duration)
+    pub fn prepone_end_shrink_to(&mut self, new_length: Duration) {
+        let length = new_length
+            .min(self.length()) // Resize only if new length is smaller than the current one
+            .max(Duration::ZERO); // Make sure the new length is non-negative
+        self.end = self.start + length;
     }
 
     /// Returns true if this time window contains the given time.
@@ -836,7 +812,7 @@ impl TimeWindow {
     }
 
     /// Shifts this time window by `duration` into the future. Affects both
-    /// `start` and `end` equally.
+    /// `start` and `end` equally, leaving the length untouched.
     ///
     /// # Examples
     ///
