@@ -38,7 +38,7 @@ jobs:
       - name: Make lint
         run: make lint
   semver:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     steps:
