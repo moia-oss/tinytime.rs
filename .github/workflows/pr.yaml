@@ -39,6 +39,8 @@ jobs:
         run: make lint
   semver:
     runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
       - name: Calculate next version
