@@ -43,11 +43,23 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@v4
+      # Manually extract labels because rymndhng/release-on-push-action can't do this correctly on a PR
+      - name: Extract labels
+        id: extract_version_bump
+        shell: bash
+        run: |
+          if [ ${{contains( github.event.pull_request.labels.*.name, 'release:major')}} ]; then
+            echo "bump_version=major" >> $GITHUB_OUTPUT
+          elif [ ${{contains( github.event.pull_request.labels.*.name, 'release:minor')}} ]; then
+            echo "bump_version=minor" >> $GITHUB_OUTPUT
+          else
+            echo "bump_version=patch" >> $GITHUB_OUTPUT
+          fi
       - name: Calculate next version
         id: calc_version
         uses: rymndhng/release-on-push-action@master
         with:
-          bump_version_scheme: patch
+          bump_version_scheme: ${{ steps.extract_version_bump.outputs.bump_version }}
           tag_prefix: ""
           dry_run: true
         env:
