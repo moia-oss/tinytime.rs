@@ -67,6 +67,7 @@ jobs:
       - name: Print version
         run: | 
           echo "${{steps.calc_version.outputs.version}} ${{github.event.pull_request.labels}}"
+          echo "${{ steps.extract_version_bump.outputs.bump_version }}"
           echo "${{toJson(github.event.pull_request.labels.*.name)}}"
       - name: Set version
         if: ${{ steps.calc_version.outputs.version }} != ""
