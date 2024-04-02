@@ -53,7 +53,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Print version
-        run: echo "${{steps.calc_version.outputs.version}}"
+        run: echo "${{steps.calc_version.outputs.version}} ${{github.event.pull_request.labels}}"
       - name: Set version
         if: ${{ steps.calc_version.outputs.version }} != ""
         run: |
