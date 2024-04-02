@@ -545,7 +545,7 @@ impl TimeWindow {
     /// assert_eq!(Time::seconds(3), x.start());
     /// ```
     #[must_use]
-    pub fn test(&mut self, new_start: Time) -> Option<Duration> {
+    pub fn extend_start(&mut self, new_start: Time) -> Option<Duration> {
         (new_start < self.start).then(|| {
             let diff = self.start - new_start;
             *self = self.with_new_start(new_start);
