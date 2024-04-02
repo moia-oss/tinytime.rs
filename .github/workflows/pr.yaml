@@ -48,11 +48,11 @@ jobs:
         id: extract_version_bump
         shell: bash
         run: |
-          if [ ${{contains( github.event.pull_request.labels.*.name, 'release:major')}} ]; then
+          if [ ${{contains( github.event.pull_request.labels.*.name, 'release:major')}} = true ]; then
             echo "bump_version=major" >> $GITHUB_OUTPUT
-          elif [ ${{contains( github.event.pull_request.labels.*.name, 'release:minor')}} ]; then
+          elif [ ${{contains( github.event.pull_request.labels.*.name, 'release:minor')}} = true ]; then
             echo "bump_version=minor" >> $GITHUB_OUTPUT
-          elif [ ${{contains( github.event.pull_request.labels.*.name, 'norelease')}} ]; then
+          elif [ ${{contains( github.event.pull_request.labels.*.name, 'norelease')}} = true ]; then
             echo "bump_version=" >> $GITHUB_OUTPUT
           else
             echo "bump_version=patch" >> $GITHUB_OUTPUT
