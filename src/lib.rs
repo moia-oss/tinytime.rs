@@ -454,12 +454,12 @@ impl TimeWindow {
     /// # Examples
     /// ```
     /// # use tinytime::*;
-    /// let mut x = TimeWindow::from_length_start(Time::seconds(1), Duration::seconds(2));
+    /// let mut x = TimeWindow::from_length_starting_at(Time::seconds(1), Duration::seconds(2));
     /// assert_eq!(Time::seconds(1), x.start());
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
     #[must_use]
-    pub fn from_length_start(start: Time, length: Duration) -> Self {
+    pub fn from_length_starting_at(start: Time, length: Duration) -> Self {
         TimeWindow::new(start, start.add(length))
     }
 
@@ -468,12 +468,12 @@ impl TimeWindow {
     ///  # Examples
     /// ```
     /// # use tinytime::*;
-    /// let mut x = TimeWindow::from_length_end(Duration::seconds(2), Time::seconds(3));
+    /// let mut x = TimeWindow::from_length_ending_at(Duration::seconds(2), Time::seconds(3));
     /// assert_eq!(Time::seconds(1), x.start());
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
     #[must_use]
-    pub fn from_length_end(length: Duration, end: Time) -> Self {
+    pub fn from_length_ending_at(length: Duration, end: Time) -> Self {
         TimeWindow::new(end.sub(length), end)
     }
 
@@ -547,9 +547,7 @@ impl TimeWindow {
     /// ```
     #[must_use]
     pub fn prepone_start_to(&self, new_start: Time) -> Self {
-        (new_start < self.start)
-            .then(|| self.with_start(new_start))
-            .unwrap_or(*self)
+        self.with_start(self.start.min(new_start))
     }
 
     /// Creates a new `TimeWindow` with the `end` postponed to the given value.
@@ -571,9 +569,7 @@ impl TimeWindow {
     /// ```
     #[must_use]
     pub fn postpone_end_to(&self, new_end: Time) -> Self {
-        (new_end > self.end)
-            .then(|| self.with_end(new_end))
-            .unwrap_or(*self)
+        self.with_end(self.end.max(new_end))
     }
 
     /// Creates a new `TimeWindow` with the `start` preponed by the given
@@ -636,9 +632,7 @@ impl TimeWindow {
     /// ```
     #[must_use]
     pub fn postpone_start_to(&self, new_start: Time) -> Self {
-        (new_start > self.start)
-            .then(|| self.with_start(new_start))
-            .unwrap_or(*self)
+        self.with_start(self.start.max(new_start))
     }
 
     /// Creates a new `TimeWindow` with the `end` preponed to the given value.
@@ -666,9 +660,7 @@ impl TimeWindow {
     /// ```
     #[must_use]
     pub fn prepone_end_to(&self, new_end: Time) -> Self {
-        (new_end < self.end)
-            .then(|| self.with_end(new_end))
-            .unwrap_or(*self)
+        self.with_end(self.end.min(new_end))
     }
 
     /// Creates a new `TimeWindow` with the `start` postponed so that the new
@@ -698,6 +690,7 @@ impl TimeWindow {
     ///     tw.postpone_start_shrink_to(Duration::seconds(5))
     /// );
     /// ```
+    #[must_use]
     pub fn postpone_start_shrink_to(&self, new_length: Duration) -> Self {
         let length = new_length
             .min(self.length()) // Resize only if new length is smaller than the current one
@@ -732,6 +725,7 @@ impl TimeWindow {
     ///     tw.prepone_end_shrink_to(Duration::seconds(5))
     /// );
     /// ```
+    #[must_use]
     pub fn prepone_end_shrink_to(&self, new_length: Duration) -> Self {
         let length = new_length
             .min(self.length()) // Resize only if new length is smaller than the current one
