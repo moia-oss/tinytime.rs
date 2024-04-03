@@ -454,12 +454,12 @@ impl TimeWindow {
     /// # Examples
     /// ```
     /// # use tinytime::*;
-    /// let mut x = TimeWindow::from_length_starting_at(Time::seconds(1), Duration::seconds(2));
+    /// let mut x = TimeWindow::from_length_starting_at(Duration::seconds(2), Time::seconds(1));
     /// assert_eq!(Time::seconds(1), x.start());
     /// assert_eq!(Time::seconds(3), x.end());
     /// ```
     #[must_use]
-    pub fn from_length_starting_at(start: Time, length: Duration) -> Self {
+    pub fn from_length_starting_at(length: Duration, start: Time) -> Self {
         TimeWindow::new(start, start.add(length))
     }
 
