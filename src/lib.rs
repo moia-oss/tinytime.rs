@@ -451,30 +451,44 @@ impl TimeWindow {
 
     /// Creates time window from start time and length.
     ///
+    /// Negative lengths are treated as [`Duration::ZERO`].
+    ///
     /// # Examples
     /// ```
     /// # use tinytime::*;
-    /// let mut x = TimeWindow::from_length_starting_at(Duration::seconds(2), Time::seconds(1));
-    /// assert_eq!(Time::seconds(1), x.start());
-    /// assert_eq!(Time::seconds(3), x.end());
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 3),
+    ///     TimeWindow::from_length_starting_at(Duration::seconds(2), Time::seconds(1))
+    /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 1),
+    ///     TimeWindow::from_length_starting_at(Duration::seconds(-2), Time::seconds(1))
+    /// );
     /// ```
     #[must_use]
     pub fn from_length_starting_at(length: Duration, start: Time) -> Self {
-        TimeWindow::new(start, start.add(length))
+        TimeWindow::new(start, start.add(length.max(Duration::ZERO)))
     }
 
     /// Creates time window from length and end time.
     ///
+    /// Negative lengths are treated as [`Duration::ZERO`].
+    ///
     ///  # Examples
     /// ```
     /// # use tinytime::*;
-    /// let mut x = TimeWindow::from_length_ending_at(Duration::seconds(2), Time::seconds(3));
-    /// assert_eq!(Time::seconds(1), x.start());
-    /// assert_eq!(Time::seconds(3), x.end());
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 3),
+    ///     TimeWindow::from_length_ending_at(Duration::seconds(2), Time::seconds(3))
+    /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(3, 3),
+    ///     TimeWindow::from_length_ending_at(Duration::seconds(-2), Time::seconds(3))
+    /// );
     /// ```
     #[must_use]
     pub fn from_length_ending_at(length: Duration, end: Time) -> Self {
-        TimeWindow::new(end.sub(length), end)
+        TimeWindow::new(end.sub(length.max(Duration::ZERO)), end)
     }
 
     #[must_use]
@@ -575,6 +589,8 @@ impl TimeWindow {
     /// Creates a new `TimeWindow` with the `start` preponed by the given
     /// duration.
     ///
+    /// Negative durations are treated as [`Duration::ZERO`].
+    ///
     /// # Examples
     /// ```
     /// # use tinytime::*;
@@ -583,14 +599,20 @@ impl TimeWindow {
     ///     TimeWindow::from_seconds(5, 9),
     ///     tw.prepone_start_by(Duration::seconds(3))
     /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(8, 9),
+    ///     tw.prepone_start_by(Duration::seconds(-3))
+    /// );
     /// ```
     #[must_use]
     pub fn prepone_start_by(&self, duration: Duration) -> Self {
-        self.with_start(self.start - duration)
+        self.with_start(self.start - duration.max(Duration::ZERO))
     }
 
     /// Creates a new `TimeWindow` with the `end` postponed by the given
     /// duration.
+    ///
+    /// Negative durations are treated as [`Duration::ZERO`].
     ///
     /// # Examples
     /// ```
@@ -600,10 +622,14 @@ impl TimeWindow {
     ///     TimeWindow::from_seconds(1, 5),
     ///     tw.postpone_end_by(Duration::seconds(3))
     /// );
+    /// assert_eq!(
+    ///     TimeWindow::from_seconds(1, 2),
+    ///     tw.postpone_end_by(Duration::seconds(-3))
+    /// );
     /// ```
     #[must_use]
     pub fn postpone_end_by(&self, duration: Duration) -> Self {
-        self.with_end(self.end + duration)
+        self.with_end(self.end + duration.max(Duration::ZERO))
     }
 
     /// Creates a new `TimeWindow` with the `start` postponed to the given
