@@ -1067,11 +1067,8 @@ impl Duration {
     /// Returns the number of non-negative whole milliseconds in the Duration
     /// instance.
     #[must_use]
-    pub fn as_millis_unsigned(&self) -> u64 {
-        #[allow(clippy::cast_sign_loss)]
-        {
-            max(self.0, 0) as u64
-        }
+    pub const fn as_millis_unsigned(&self) -> u64 {
+        as_unsigned(self.0)
     }
 
     /// Returns the number of whole seconds in the Duration instance.
@@ -1083,11 +1080,8 @@ impl Duration {
     /// Returns the number of non-negative whole seconds in the Duration
     /// instance.
     #[must_use]
-    pub fn as_seconds_unsigned(&self) -> u64 {
-        #[allow(clippy::cast_sign_loss)]
-        {
-            max(0, self.0 / 1000) as u64
-        }
+    pub const fn as_seconds_unsigned(&self) -> u64 {
+        as_unsigned(self.0 / 1000)
     }
 
     /// Returns the number of whole minutes in the Duration instance.
@@ -1546,6 +1540,15 @@ impl Display for DurationParseError {
             f,
             "Unrecognized Duration format, valid examples are '2h3s', '1m', '1h3m5s700ms'"
         )
+    }
+}
+
+/// Work-around for `max` in `std` not being const
+const fn as_unsigned(x: i64) -> u64 {
+    if x >= 0 {
+        x as u64
+    } else {
+        0
     }
 }
 
