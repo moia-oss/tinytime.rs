@@ -37,6 +37,9 @@
 //! let result: f64 = duration / duration;          // | Duration   | /  | Duration | f64        |
 
 //! ```
+#[cfg(feature = "rand")]
+pub mod rand;
+
 use core::fmt;
 use std::cmp::max;
 use std::cmp::min;
