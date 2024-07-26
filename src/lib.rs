@@ -186,9 +186,35 @@ impl Time {
         Time::from(SystemTime::now())
     }
 
+    /// Returns the number of whole seconds in the time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use tinytime::Time;
+    /// assert_eq!(Time::minutes(1).as_seconds(), 60);
+    /// ```
+    #[must_use]
+    pub const fn as_seconds(&self) -> i64 {
+        self.0 / Self::SECOND.0
+    }
+
     #[must_use]
     pub const fn as_millis(&self) -> i64 {
         self.0
+    }
+
+    /// Returns the number of subsecond millis converted to nanos.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use tinytime::Time;
+    /// assert_eq!(Time::millis(12345).as_subsecond_nanos(), 345_000_000);
+    /// ```
+    #[must_use]
+    pub const fn as_subsecond_nanos(&self) -> i32 {
+        (self.0 % Self::SECOND.0 * 1_000_000) as i32
     }
 
     /// Rounds time down to a step size
