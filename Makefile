@@ -1,4 +1,4 @@
-RUST_NIGHTLY_VERSION  := $(shell cat rust-toolchain-nightly)
+RUST_NIGHTLY_VERSION  := $(shell sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain-nightly.toml)
 GRCOV_VERSION         := 0.8.19
 
 install-nightly:
