@@ -62,7 +62,6 @@ use std::time::SystemTime;
 use chrono::format::DelayedFormat;
 use chrono::format::StrftimeItems;
 use chrono::DateTime;
-use chrono::NaiveDateTime;
 use derive_more::Deref;
 use derive_more::From;
 use derive_more::Into;
@@ -151,7 +150,7 @@ impl Time {
             nanos.unsigned_abs()
         } as u32;
 
-        let t = NaiveDateTime::from_timestamp_opt(secs, nanos);
+        let t = DateTime::from_timestamp(secs, nanos);
         match t {
             None => DelayedFormat::new(None, None, StrftimeItems::new("∞")),
             Some(v) => v.format(fmt),
