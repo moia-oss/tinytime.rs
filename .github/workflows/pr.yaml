@@ -18,8 +18,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: debug-build
-      - name: Make test
-        run: make test
+      - name: Test
+        run: just test
   lint:
     runs-on: ubuntu-22.04
     steps:
@@ -41,6 +41,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: debug-build-nightly
-      - name: Make lint
-        run: make lint
+      - name: Lint
+        run: just lint "strict"
  
