@@ -13,7 +13,7 @@ rand = ["dep:rand"]
 
 [dependencies]
 chrono = "0.4.31"
-derive_more = "0.99.17"
+derive_more = { version = "1.0.0", features = ["deref", "from", "into", "not", "sum"] }
 lazy_static = "1.4.0"
 rand = { version = "0.8.5", optional = true }
 regex = "1.10.2"
