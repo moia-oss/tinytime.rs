@@ -1,7 +1,3 @@
-#![allow(rustdoc::private_intra_doc_links)]
-#![deny(rustdoc::broken_intra_doc_links)]
-#![warn(clippy::disallowed_types)]
-
 //! Low overhead implementation of time related concepts.
 //!
 //!  # Operator support
@@ -141,9 +137,10 @@ impl Time {
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
         let secs = self.0 / 1000;
         let nanos = (self.0 % 1000) * 1_000_000;
-        // casting to u32 is safe here because it is guaranteed that the value is in
-        // 0..1_000_000_000
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "casting to u32 is safe here because it is guaranteed that the value is in 0..1_000_000_000"
+        )]
         let nanos = if nanos.is_negative() {
             1_000_000_000 - nanos.unsigned_abs()
         } else {
@@ -366,7 +363,10 @@ impl From<Time> for SystemTime {
             input.0 >= 0,
             "cannot convert a negative Time instance {input:?} to std::time::SystemTime"
         );
-        #[allow(clippy::cast_sign_loss)] // the debug_assert above should catch this case
+        #[expect(
+            clippy::cast_sign_loss,
+            reason = "the debug_assert above should catch this case"
+        )]
         {
             std::time::UNIX_EPOCH + std::time::Duration::from_millis(input.0 as u64)
         }
@@ -1235,13 +1235,13 @@ impl Display for Duration {
 
 impl Debug for Duration {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
+        Display::fmt(self, f)
     }
 }
 
 impl From<f64> for Duration {
     fn from(num: f64) -> Self {
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "expected behavior")]
         {
             Duration::millis(num.round() as i64)
         }
@@ -1366,7 +1366,7 @@ impl Mul<f64> for Duration {
     type Output = Duration;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "expected behavior")]
         {
             Duration((self.0 as f64 * rhs).round() as i64)
         }
@@ -1383,7 +1383,7 @@ impl Mul<Duration> for f64 {
 
 impl MulAssign<f64> for Duration {
     fn mul_assign(&mut self, rhs: f64) {
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "expected behavior")]
         {
             self.0 = (self.0 as f64 * rhs).round() as i64;
         }
@@ -1399,7 +1399,7 @@ impl Div<f64> for Duration {
             rhs.abs() > f64::EPSILON,
             "Dividing by zero results in INF. This is probably not what you want."
         );
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "expected behavior")]
         {
             Duration((self.0 as f64 / rhs).round() as i64)
         }
@@ -1408,7 +1408,7 @@ impl Div<f64> for Duration {
 
 impl DivAssign<f64> for Duration {
     fn div_assign(&mut self, rhs: f64) {
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "expected behavior")]
         {
             self.0 = (self.0 as f64 / rhs).round() as i64;
         }
@@ -1480,11 +1480,13 @@ impl From<Duration> for std::time::Duration {
             input.is_non_negative(),
             "Negative Duration {input} cannot be converted to std::time::Duration"
         );
-        #[allow(clippy::cast_sign_loss)] // caught by the debug_assert above
+        #[expect(clippy::cast_sign_loss, reason = "caught by the debug_assert above")]
         let secs = (input.0 / 1000) as u64;
-        // casting to u32 is safe here because it is guaranteed that the value is in
-        // 0..1_000_000_000. The sign loss is caught by the debug_assert above.
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+        #[expect(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "casting to u32 is safe here because it is guaranteed that the value is in 0..1_000_000_000. The sign loss is caught by the debug_assert above."
+        )]
         let nanos = ((input.0 % 1000) * 1_000_000) as u32;
         std::time::Duration::new(secs, nanos)
     }
@@ -1496,7 +1498,7 @@ impl From<std::time::Duration> for Duration {
             i64::try_from(input.as_millis()).is_ok(),
             "Input std::time::Duration ({input:?}) is too large to be converted to tinytime::Duration"
         );
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "expected behavior")]
         Duration::millis(input.as_millis() as i64)
     }
 }

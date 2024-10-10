@@ -42,22 +42,27 @@ unused_macro_rules = "warn"
 unused_qualifications = "warn"
 unused_results = "warn"
 dead_code = "warn"
-unused = "warn"
+unused = { level = "warn", priority = -1 }
 
 [lints.rustdoc]
 broken_intra_doc_links = "deny"
 missing_crate_level_docs = "warn"
 
 [lints.clippy]
-cargo = "allow" # TODO
-complexity = "warn"
-correctness = "deny"
-perf = "warn"
-style = "warn"
-suspicious = "deny"
+complexity = { level = "warn", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+perf = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+
+cargo = { level = "allow", priority = -1 } # TODO
 todo = "warn"
 
+disallowed-types = "deny"
 missing_const_for_fn = "warn"
+
+allow_attributes = "deny"
+allow_attributes_without_reason = "deny"
 
 ### Pedantic
 pedantic = { level = "warn", priority = -1 }
