@@ -6,8 +6,11 @@ updates:
     interval: weekly
     day: friday
     time: "09:00"
+    timezone: Europe/Berlin
+  commit-message:
+    prefix: "chore"
   groups:
-    cargo-dependencies:
+    cargo:
       patterns:
         - "*"
   open-pull-requests-limit: 99
@@ -17,8 +20,11 @@ updates:
     interval: weekly
     day: friday
     time: "09:00"
+    timezone: Europe/Berlin
+  commit-message:
+    prefix: "chore"
   groups:
-    github-actions-dependencies:
+    github-actions:
       patterns:
         - "*"
   open-pull-requests-limit: 99
