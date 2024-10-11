@@ -19,5 +19,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - update to rust 1.81.0 ([#68](https://github.com/moia-oss/tinytime.rs/pull/68))
 - add Cargo.lock to avoid discrepancies with local runs and CI runs
 - just not make
-
-## [Unreleased]
