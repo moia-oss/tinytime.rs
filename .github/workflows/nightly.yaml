@@ -10,8 +10,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
       - run: |
-          echo "RUST_TOOLCHAIN=$(just rust-version)" >> $GITHUB_ENV
           echo "RUST_TOOLCHAIN_NIGHTLY=$(just rust-nightly-version)" >> $GITHUB_ENV
       - uses: dtolnay/rust-toolchain@master
         with:
