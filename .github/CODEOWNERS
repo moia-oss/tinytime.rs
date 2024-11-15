@@ -2,5 +2,5 @@
 #
 # https://help.github.com/articles/about-codeowners/
 #
-*   @fabian-braun @jankeu @jan-xyz @rinde @lxwbr @urmaul @Felerius
-/CODEOWNERS @fabian-braun @jankeu @jan-xyz @lxwbr @urmaul @Felerius
+*   @fabian-braun @jankeu @rinde @lxwbr @urmaul @Felerius
+/CODEOWNERS @fabian-braun @jankeu @lxwbr @urmaul @Felerius
