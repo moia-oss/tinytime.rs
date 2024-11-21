@@ -528,10 +528,10 @@ impl TimeWindow {
     }
 
     #[must_use]
-    pub fn widest() -> Self {
+    pub const fn widest() -> Self {
         TimeWindow {
             start: Time::EPOCH,
-            end: Time::EPOCH + Duration::MAX,
+            end: Time::MAX,
         }
     }
 
