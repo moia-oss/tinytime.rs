@@ -12,13 +12,13 @@ license = "MIT OR Apache-2.0"
 rand = ["dep:rand"]
 
 [dependencies]
-chrono = "0.4.31"
+chrono = "0.4.39"
 derive_more = { version = "1.0.0", features = ["deref", "from", "into", "not", "sum"] }
 lazy_static = "1.4.0"
 rand = { version = "0.8.5", optional = true }
 regex = "1.11.1"
-serde = { version = "1.0.215", features = ["derive"], default-features = false }
-thiserror = "2.0.4"
+serde = { version = "1.0.216", features = ["derive"], default-features = false }
+thiserror = "2.0.6"
 
 [dev-dependencies]
 serde_test = "1.0.176"
