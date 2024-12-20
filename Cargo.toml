@@ -18,7 +18,7 @@ lazy_static = "1.4.0"
 rand = { version = "0.8.5", optional = true }
 regex = "1.11.1"
 serde = { version = "1.0.216", features = ["derive"], default-features = false }
-thiserror = "2.0.6"
+thiserror = "2.0.8"
 
 [dev-dependencies]
 serde_test = "1.0.176"
