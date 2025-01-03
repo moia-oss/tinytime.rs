@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.8](https://github.com/moia-oss/tinytime.rs/compare/v0.12.7...v0.12.8) - 2025-01-03
+
+### Other
+
+- bump serde from 1.0.216 to 1.0.217 in the cargo group (#90)
+- bump the cargo group across 1 directory with 2 updates (#89)
+- bump the cargo group with 3 updates (#87)
+- bump thiserror from 2.0.3 to 2.0.4 in the cargo group (#85)
+
 ## [0.12.7](https://github.com/moia-oss/tinytime.rs/compare/v0.12.6...v0.12.7) - 2024-11-22
 
 ### Other
