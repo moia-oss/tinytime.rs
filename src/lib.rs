@@ -53,6 +53,7 @@ use std::ops::MulAssign;
 use std::ops::Sub;
 use std::ops::SubAssign;
 use std::str::FromStr;
+use std::sync::OnceLock;
 use std::time::SystemTime;
 
 use chrono::format::DelayedFormat;
@@ -63,7 +64,6 @@ use derive_more::From;
 use derive_more::Into;
 use derive_more::Neg;
 use derive_more::Sum;
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::de::Visitor;
 use serde::Deserialize;
@@ -1503,6 +1503,11 @@ impl From<std::time::Duration> for Duration {
     }
 }
 
+fn duration_regex() -> &'static Regex {
+    static LOCK: OnceLock<Regex> = OnceLock::new();
+    LOCK.get_or_init(|| Regex::new(REGEX).unwrap())
+}
+
 /// Parses Duration from str
 ///
 /// # Example
@@ -1531,10 +1536,7 @@ impl FromStr for Duration {
     type Err = DurationParseError;
 
     fn from_str(seconds: &str) -> Result<Self, Self::Err> {
-        lazy_static! {
-            static ref RE: Regex = Regex::new(REGEX).unwrap();
-        }
-        let captures = RE
+        let captures = duration_regex()
             .captures(seconds)
             .ok_or(DurationParseError::UnrecognizedFormat)?;
         let mut duration = Duration::ZERO;
