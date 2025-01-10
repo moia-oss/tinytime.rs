@@ -45,4 +45,4 @@ install-nightly:
 	rustup toolchain install '{{rust_nightly_version}}'
 
 verify-msrv:
-    cargo msrv verify
+    cargo msrv verify --all-features --ignore-lockfile
