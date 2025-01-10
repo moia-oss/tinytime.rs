@@ -45,5 +45,4 @@ install-nightly:
 	rustup toolchain install '{{rust_nightly_version}}'
 
 verify-msrv:
-    cargo install cargo-msrv
     cargo msrv verify

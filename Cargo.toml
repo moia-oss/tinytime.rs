@@ -6,7 +6,7 @@ repository = "https://github.com/moia-oss/tinytime.rs"
 documentation = "https://docs.rs/tinytime"
 edition = "2021"
 version = "0.12.7"
-rust-version = "1.81.0"
+# rust-version = "1.81.0"
 license = "MIT OR Apache-2.0"
 
 [features]

@@ -49,10 +49,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@v2
         with:
-          tool: just
+          tool: just, cargo-binstall
       - run: echo "RUST_TOOLCHAIN=$(just rust-version)" >> $GITHUB_ENV
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: rustfmt, clippy
-      - run: just verify-msrv
+      - run: |
+          cargo binstall cargo-msrv
+          just verify-msrv
