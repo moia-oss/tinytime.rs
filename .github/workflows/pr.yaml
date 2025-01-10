@@ -43,4 +43,18 @@ jobs:
           shared-key: debug-build-nightly
       - name: Lint
         run: just lint "strict"
- 
+  msrv-check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just, cargo-binstall
+      - run: echo "RUST_TOOLCHAIN=$(just rust-version)" >> $GITHUB_ENV
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: rustfmt, clippy
+      - run: |
+          cargo binstall cargo-msrv
+          just verify-msrv
