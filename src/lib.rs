@@ -37,7 +37,6 @@
 pub mod rand;
 
 use core::fmt;
-use std::cell::OnceCell;
 use std::cmp::max;
 use std::cmp::min;
 use std::cmp::Ordering;
@@ -65,7 +64,6 @@ use derive_more::From;
 use derive_more::Into;
 use derive_more::Neg;
 use derive_more::Sum;
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::de::Visitor;
 use serde::Deserialize;
