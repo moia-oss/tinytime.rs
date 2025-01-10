@@ -357,31 +357,26 @@ impl<'de> Visitor<'de> for TimeVisitor {
     }
 }
 
-impl From<Time> for SystemTime {
-    fn from(input: Time) -> Self {
-        debug_assert!(
-            input.0 >= 0,
-            "cannot convert a negative Time instance {input:?} to std::time::SystemTime"
-        );
-        #[expect(
-            clippy::cast_sign_loss,
-            reason = "the debug_assert above should catch this case"
-        )]
-        {
-            std::time::UNIX_EPOCH + std::time::Duration::from_millis(input.0 as u64)
-        }
+#[derive(Debug, Copy, Clone)]
+pub struct TimeIsNegativeError;
+
+impl TryFrom<Time> for SystemTime {
+    type Error = TimeIsNegativeError;
+
+    fn try_from(input: Time) -> Result<Self, Self::Error> {
+        u64::try_from(input.0).map_or(Err(TimeIsNegativeError), |t| {
+            Ok(std::time::UNIX_EPOCH + std::time::Duration::from_millis(t))
+        })
     }
 }
 
 impl From<SystemTime> for Time {
     fn from(input: SystemTime) -> Self {
-        if input > SystemTime::UNIX_EPOCH {
-            let std_dur = input.duration_since(SystemTime::UNIX_EPOCH).unwrap();
-            Self::millis(Duration::from(std_dur).as_millis())
-        } else {
-            let std_dur = SystemTime::UNIX_EPOCH.duration_since(input).unwrap();
-            Self::millis(-Duration::from(std_dur).as_millis())
-        }
+        let duration = match input.duration_since(SystemTime::UNIX_EPOCH) {
+            Ok(std_dur) => Duration::from(std_dur),
+            Err(err) => -Duration::from(err.duration()),
+        };
+        Self::millis(duration.as_millis())
     }
 }
 
@@ -1503,11 +1498,6 @@ impl From<std::time::Duration> for Duration {
     }
 }
 
-fn duration_regex() -> &'static Regex {
-    static LOCK: OnceLock<Regex> = OnceLock::new();
-    LOCK.get_or_init(|| Regex::new(REGEX).unwrap())
-}
-
 /// Parses Duration from str
 ///
 /// # Example
@@ -1541,16 +1531,32 @@ impl FromStr for Duration {
             .ok_or(DurationParseError::UnrecognizedFormat)?;
         let mut duration = Duration::ZERO;
         if let Some(h) = captures.name("h") {
-            duration += Duration::hours(h.as_str().parse::<i64>().unwrap());
+            duration += Duration::hours(
+                h.as_str()
+                    .parse::<i64>()
+                    .map_err(|_| DurationParseError::UnrecognizedFormat)?,
+            );
         }
         if let Some(m) = captures.name("m") {
-            duration += Duration::minutes(m.as_str().parse::<i64>().unwrap());
+            duration += Duration::minutes(
+                m.as_str()
+                    .parse::<i64>()
+                    .map_err(|_| DurationParseError::UnrecognizedFormat)?,
+            );
         }
         if let Some(s) = captures.name("s") {
-            duration += Duration::seconds(s.as_str().parse::<i64>().unwrap());
+            duration += Duration::seconds(
+                s.as_str()
+                    .parse::<i64>()
+                    .map_err(|_| DurationParseError::UnrecognizedFormat)?,
+            );
         }
         if let Some(ms) = captures.name("ms") {
-            duration += Duration::millis(ms.as_str().parse::<i64>().unwrap());
+            duration += Duration::millis(
+                ms.as_str()
+                    .parse::<i64>()
+                    .map_err(|_| DurationParseError::UnrecognizedFormat)?,
+            );
         }
         if captures.name("sign").is_some() {
             duration *= -1;
@@ -1585,6 +1591,15 @@ const fn as_unsigned(x: i64) -> u64 {
 }
 
 const REGEX: &str = r"^(?P<sign>-)?((?P<h>\d+)h)?((?P<m>\d+)m)?((?P<s>\d+)s)?((?P<ms>\d+)ms)?$";
+
+#[expect(
+    clippy::panic,
+    reason = "This can only happen if the regex is incorrect which would be caught by tests"
+)]
+fn duration_regex() -> &'static Regex {
+    static LOCK: OnceLock<Regex> = OnceLock::new();
+    LOCK.get_or_init(|| Regex::new(REGEX).unwrap_or_else(|_| panic!("Invalid regex")))
+}
 
 #[cfg(test)]
 mod time_test {
