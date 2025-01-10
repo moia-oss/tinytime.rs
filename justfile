@@ -8,12 +8,16 @@ set quiet
 
 rust_version         := `sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain.toml`
 rust_nightly_version := `sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain-nightly.toml`
+msrv                 := `sed -nr 's/rust-version = "(.*)"/\1/p' Cargo.toml`
 
 rust-version:
     echo '{{rust_version}}'
 
 rust-nightly-version:
     echo '{{rust_nightly_version}}'
+
+msrv:
+    echo '{{msrv}}'
 
 test:
 	cargo test --workspace --all-targets --all-features
@@ -39,3 +43,7 @@ udeps:
 
 install-nightly:
 	rustup toolchain install '{{rust_nightly_version}}'
+
+verify-msrv:
+    cargo install cargo-msrv
+    cargo msrv verify
