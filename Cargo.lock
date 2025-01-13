@@ -353,7 +353,7 @@ dependencies = [
 
 [[package]]
 name = "tinytime"
-version = "0.12.7"
+version = "0.13.0"
 dependencies = [
  "chrono",
  "derive_more",
