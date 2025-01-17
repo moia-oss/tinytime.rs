@@ -18,7 +18,7 @@ derive_more = { version = "1.0.0", features = ["deref", "from", "into", "not", "
 rand = { version = "0.8.5", optional = true }
 regex = "1.11.1"
 serde = { version = "1.0.217", features = ["derive"], default-features = false }
-thiserror = "2.0.10"
+thiserror = "2.0.11"
 
 [dev-dependencies]
 serde_test = "1.0.176"
