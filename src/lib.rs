@@ -50,6 +50,8 @@ use std::ops::Div;
 use std::ops::DivAssign;
 use std::ops::Mul;
 use std::ops::MulAssign;
+use std::ops::Rem;
+use std::ops::RemAssign;
 use std::ops::Sub;
 use std::ops::SubAssign;
 use std::str::FromStr;
@@ -1469,6 +1471,28 @@ impl Div<Duration> for Duration {
     }
 }
 
+impl Rem<Duration> for Time {
+    type Output = Duration;
+
+    fn rem(self, rhs: Duration) -> Self::Output {
+        Duration(self.0 % rhs.0)
+    }
+}
+
+impl Rem<Duration> for Duration {
+    type Output = Duration;
+
+    fn rem(self, rhs: Duration) -> Self::Output {
+        Duration(self.0 % rhs.0)
+    }
+}
+
+impl RemAssign<Duration> for Duration {
+    fn rem_assign(&mut self, rhs: Duration) {
+        self.0 %= rhs.0;
+    }
+}
+
 impl From<Duration> for std::time::Duration {
     fn from(input: Duration) -> Self {
         debug_assert!(
@@ -1964,6 +1988,32 @@ mod duration_test {
         let time2 = Time::minutes(3);
         assert_eq!(Duration::minutes(4), time - time2);
         assert_eq!(Duration::minutes(-4), time2 - time);
+    }
+
+    #[test]
+    fn time_rem_duration() {
+        let time57 = Time::minutes(57);
+        assert_eq!(Duration::ZERO, time57 % Duration::minutes(1));
+        assert_eq!(Duration::minutes(57), time57 % Duration::minutes(60));
+        assert_eq!(
+            Duration::minutes(57),
+            (time57 + Duration::hours(17)) % Duration::minutes(60)
+        );
+    }
+
+    #[test]
+    fn duration_rem_duration() {
+        let dur34 = Duration::minutes(34);
+        assert_eq!(Duration::ZERO, dur34 % Duration::minutes(1));
+        assert_eq!(Duration::minutes(34), dur34 % Duration::minutes(45));
+        assert_eq!(Duration::minutes(10), dur34 % Duration::minutes(12));
+    }
+
+    #[test]
+    fn duration_rem_assign_duration() {
+        let mut dur = Duration::minutes(734);
+        dur %= Duration::minutes(100);
+        assert_eq!(Duration::minutes(34), dur);
     }
 
     #[test]
