@@ -12,10 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-- Update serde_json from 1.0.137 to 1.0.138 (#100)
 - update rand to 0.9.0 (#101)
-- bump serde_json from 1.0.135 to 1.0.137 in the cargo group (#98)
-- bump thiserror from 2.0.10 to 2.0.11 in the cargo group (#96)
+- bump serde_json from 1.0.135 to 1.0.138 (#98, #100)
+- bump thiserror from 2.0.10 to 2.0.11 (#96)
 
 ## [0.13.0](https://github.com/moia-oss/tinytime.rs/compare/v0.12.7...v0.13.0) - 2025-01-10
 
