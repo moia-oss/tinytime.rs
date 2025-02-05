@@ -58,13 +58,11 @@ use std::ops::RemAssign;
 use std::ops::Sub;
 use std::ops::SubAssign;
 use std::str::FromStr;
-use std::sync::OnceLock;
 use std::time::SystemTime;
 
 use chrono::format::DelayedFormat;
 use chrono::format::StrftimeItems;
 use chrono::DateTime;
-use regex::Regex;
 use serde::de::Visitor;
 use serde::Deserialize;
 use serde::Serialize;
@@ -1605,42 +1603,38 @@ impl From<std::time::Duration> for Duration {
 impl FromStr for Duration {
     type Err = DurationParseError;
 
-    fn from_str(seconds: &str) -> Result<Self, Self::Err> {
-        let captures = duration_regex()
-            .captures(seconds)
-            .ok_or(DurationParseError::UnrecognizedFormat)?;
-        let mut duration = Duration::ZERO;
-        if let Some(h) = captures.name("h") {
-            duration += Duration::hours(
-                h.as_str()
-                    .parse::<i64>()
-                    .map_err(|_| DurationParseError::UnrecognizedFormat)?,
-            );
+    #[expect(
+        clippy::string_slice,
+        reason = "all slice indices come from methods that guarantee correctness"
+    )]
+    fn from_str(mut s: &str) -> Result<Self, Self::Err> {
+        let without_sign = s.strip_prefix('-');
+        let negative = without_sign.is_some();
+        s = without_sign.unwrap_or(s);
+
+        let mut duration = Self::ZERO;
+        while !s.is_empty() {
+            let without_number = s.trim_start_matches(|c: char| c.is_ascii_digit());
+            let Ok(number) = s[..s.len() - without_number.len()].parse::<i64>() else {
+                return Err(DurationParseError::UnrecognizedFormat);
+            };
+            let without_unit = without_number.trim_start_matches(|c: char| !c.is_ascii_digit());
+            let unit = &without_number[..without_number.len() - without_unit.len()];
+
+            duration += match unit {
+                "h" => Duration::hours(number),
+                "m" => Duration::minutes(number),
+                "s" => Duration::seconds(number),
+                "ms" => Duration::millis(number),
+                _ => return Err(DurationParseError::UnrecognizedFormat),
+            };
+            s = without_unit;
         }
-        if let Some(m) = captures.name("m") {
-            duration += Duration::minutes(
-                m.as_str()
-                    .parse::<i64>()
-                    .map_err(|_| DurationParseError::UnrecognizedFormat)?,
-            );
+
+        if negative {
+            duration = -duration;
         }
-        if let Some(s) = captures.name("s") {
-            duration += Duration::seconds(
-                s.as_str()
-                    .parse::<i64>()
-                    .map_err(|_| DurationParseError::UnrecognizedFormat)?,
-            );
-        }
-        if let Some(ms) = captures.name("ms") {
-            duration += Duration::millis(
-                ms.as_str()
-                    .parse::<i64>()
-                    .map_err(|_| DurationParseError::UnrecognizedFormat)?,
-            );
-        }
-        if captures.name("sign").is_some() {
-            duration *= -1;
-        }
+
         Ok(duration)
     }
 }
@@ -1668,17 +1662,6 @@ const fn as_unsigned(x: i64) -> u64 {
     } else {
         0
     }
-}
-
-const REGEX: &str = r"^(?P<sign>-)?((?P<h>\d+)h)?((?P<m>\d+)m)?((?P<s>\d+)s)?((?P<ms>\d+)ms)?$";
-
-#[expect(
-    clippy::panic,
-    reason = "This can only happen if the regex is incorrect which would be caught by tests"
-)]
-fn duration_regex() -> &'static Regex {
-    static LOCK: OnceLock<Regex> = OnceLock::new();
-    LOCK.get_or_init(|| Regex::new(REGEX).unwrap_or_else(|_| panic!("Invalid regex")))
 }
 
 #[cfg(test)]

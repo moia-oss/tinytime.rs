@@ -15,7 +15,6 @@ rand = ["dep:rand"]
 [dependencies]
 chrono = "0.4.39"
 rand = { version = "0.9.0", optional = true }
-regex = "1.11.1"
 serde = { version = "1.0.217", features = ["derive"], default-features = false }
 
 [dev-dependencies]
