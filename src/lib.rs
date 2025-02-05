@@ -68,7 +68,6 @@ use regex::Regex;
 use serde::de::Visitor;
 use serde::Deserialize;
 use serde::Serialize;
-use thiserror::Error;
 
 /// A point in time.
 ///
@@ -425,11 +424,21 @@ impl Debug for Time {
     }
 }
 
-#[derive(Error, Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum TimeWindowError {
-    #[error("time window start is after end")]
     StartAfterEnd,
 }
+
+impl Display for TimeWindowError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let message = match self {
+            Self::StartAfterEnd => "time window start is after end",
+        };
+        write!(f, "{message}")
+    }
+}
+
+impl Error for TimeWindowError {}
 
 /// An interval or range of time: `[start,end)`.
 /// Debug-asserts ensure that start <= end.
