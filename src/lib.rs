@@ -44,12 +44,15 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
+use std::iter::Sum;
 use std::ops::Add;
 use std::ops::AddAssign;
+use std::ops::Deref;
 use std::ops::Div;
 use std::ops::DivAssign;
 use std::ops::Mul;
 use std::ops::MulAssign;
+use std::ops::Neg;
 use std::ops::Rem;
 use std::ops::RemAssign;
 use std::ops::Sub;
@@ -61,11 +64,6 @@ use std::time::SystemTime;
 use chrono::format::DelayedFormat;
 use chrono::format::StrftimeItems;
 use chrono::DateTime;
-use derive_more::Deref;
-use derive_more::From;
-use derive_more::Into;
-use derive_more::Neg;
-use derive_more::Sum;
 use regex::Regex;
 use serde::de::Visitor;
 use serde::Deserialize;
@@ -75,9 +73,7 @@ use thiserror::Error;
 /// A point in time.
 ///
 /// Low overhead time representation. Internally represented as milliseconds.
-#[derive(
-    Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Serialize, Deref, From, Into,
-)]
+#[derive(Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default, Serialize)]
 pub struct Time(i64);
 
 impl Time {
@@ -296,6 +292,26 @@ impl Time {
     }
 }
 
+impl Deref for Time {
+    type Target = i64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<Time> for i64 {
+    fn from(time: Time) -> Self {
+        time.0
+    }
+}
+
+impl From<i64> for Time {
+    fn from(value: i64) -> Self {
+        Self(value)
+    }
+}
+
 impl Display for Time {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let rfc3339_string = self.to_rfc3339();
@@ -419,7 +435,7 @@ pub enum TimeWindowError {
 /// Debug-asserts ensure that start <= end.
 /// If compiled in release mode, the invariant of start <= end is maintained, by
 /// correcting invalid use of the API (and setting end to start).
-#[derive(Clone, Debug, Eq, PartialEq, Default, Copy, Serialize, Deserialize, From, Into, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Copy, Serialize, Deserialize, Hash)]
 pub struct TimeWindow {
     start: Time,
     end: Time,
@@ -1015,6 +1031,18 @@ impl TimeWindow {
     }
 }
 
+impl From<TimeWindow> for (Time, Time) {
+    fn from(tw: TimeWindow) -> Self {
+        (tw.start, tw.end)
+    }
+}
+
+impl From<(Time, Time)> for TimeWindow {
+    fn from((start, end): (Time, Time)) -> Self {
+        Self { start, end }
+    }
+}
+
 impl Display for TimeWindow {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "[{}, {}]", self.start, self.end)
@@ -1025,22 +1053,7 @@ impl Display for TimeWindow {
 ///
 /// Duration can be negative. Internally duration is represented as
 /// milliseconds.
-#[derive(
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    Copy,
-    Clone,
-    Default,
-    Hash,
-    Serialize,
-    Deref,
-    From,
-    Into,
-    Sum,
-    Neg,
-)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Default, Hash, Serialize)]
 pub struct Duration(i64);
 
 impl Duration {
@@ -1125,6 +1138,40 @@ impl Duration {
     #[must_use]
     pub const fn is_positive(&self) -> bool {
         self.0 > 0
+    }
+}
+
+impl Deref for Duration {
+    type Target = i64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<Duration> for i64 {
+    fn from(time: Duration) -> Self {
+        time.0
+    }
+}
+
+impl From<i64> for Duration {
+    fn from(value: i64) -> Self {
+        Self(value)
+    }
+}
+
+impl Neg for Duration {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self(-self.0)
+    }
+}
+
+impl Sum for Duration {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::ZERO, Add::add)
     }
 }
 
