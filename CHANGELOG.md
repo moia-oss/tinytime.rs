@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0](https://github.com/moia-oss/tinytime.rs/compare/v0.13.1...v0.14.0) - 2025-02-20
+
+### Added
+
+- [**breaking**] feature gate chrono (#105)
+- [**breaking**] feature gate serde (#104)
+
+### Fixed
+
+- [**breaking**] fix serde support for non self-describing formats (#107)
+
+### Other
+
+- add cargo common metadata (#108)
+- minimize rand features (#106)
+- Remove unnecessary dependencies (#102)
+
 ## [0.13.1](https://github.com/moia-oss/tinytime.rs/compare/v0.13.0...v0.13.1) - 2025-02-02
 
 ### Added
