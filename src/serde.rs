@@ -101,3 +101,80 @@ impl Visitor<'_> for DurationVisitor {
         Duration::from_str(v).map_err(|e| E::custom(e.to_string()))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::Duration;
+    use crate::Time;
+    use crate::TimeWindow;
+
+    #[test]
+    fn serde_json_time() {
+        for expected in [Time::hours(7), Time::EPOCH, Time::MAX] {
+            let encoded = serde_json::to_string(&expected).unwrap();
+            let actual = serde_json::from_str(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_json_duration() {
+        for expected in [
+            Duration::millis(77777),
+            Duration::MAX,
+            Duration::ZERO,
+            -Duration::MAX,
+        ] {
+            let encoded = serde_json::to_string(&expected).unwrap();
+            let actual: Duration = serde_json::from_str(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_json_time_window() {
+        for expected in [
+            TimeWindow::new(Time::hours(7), Time::hours(19)),
+            TimeWindow::widest(),
+        ] {
+            let encoded = serde_json::to_string(&expected).unwrap();
+            let actual: TimeWindow = serde_json::from_str(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_bincode_time() {
+        for expected in [Time::hours(7), Time::EPOCH, Time::MAX] {
+            let encoded = bincode::serialize(&expected).unwrap();
+            let actual = bincode::deserialize(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_bincode_duration() {
+        for expected in [
+            Duration::millis(77777),
+            Duration::MAX,
+            Duration::ZERO,
+            -Duration::MAX,
+        ] {
+            let encoded = bincode::serialize(&expected).unwrap();
+            let actual: Duration = bincode::deserialize(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_bincode_time_window() {
+        for expected in [
+            TimeWindow::new(Time::hours(7), Time::hours(19)),
+            TimeWindow::widest(),
+        ] {
+            let encoded = bincode::serialize(&expected).unwrap();
+            let actual: TimeWindow = bincode::deserialize(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+}
