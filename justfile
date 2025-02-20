@@ -21,7 +21,7 @@ msrv:
 
 test:
 	cargo test --workspace --all-targets --all-features
-	cargo test --workspace --doc
+	cargo test --workspace --doc --all-features
 
 lint strict="":
     cargo '+{{rust_nightly_version}}' fmt -- --check

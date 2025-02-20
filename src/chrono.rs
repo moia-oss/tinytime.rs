@@ -46,6 +46,8 @@ impl Time {
     /// The parsing is forwarded to [`chrono::DateTime::parse_from_rfc3339()`].
     /// Note that any time smaller than milliseconds is truncated.
     ///
+    /// For using this with `serde`, see [`Time::deserialize_rfc3339()`].
+    ///
     /// ## Example
     /// ```
     /// use tinytime::Duration;
