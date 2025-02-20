@@ -35,8 +35,6 @@
 //! ```
 #[cfg(feature = "rand")]
 pub mod rand;
-#[cfg(feature = "serde")]
-pub mod serde;
 
 use core::fmt;
 use std::cmp::max;
@@ -70,7 +68,7 @@ use chrono::DateTime;
 ///
 /// Low overhead time representation. Internally represented as milliseconds.
 #[derive(Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(::serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Time(i64);
 
 impl Time {
@@ -398,7 +396,7 @@ impl Error for TimeWindowError {}
 /// If compiled in release mode, the invariant of start <= end is maintained, by
 /// correcting invalid use of the API (and setting end to start).
 #[derive(Clone, Debug, Eq, PartialEq, Default, Copy, Hash)]
-#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TimeWindow {
     start: Time,
     end: Time,
@@ -1017,7 +1015,7 @@ impl Display for TimeWindow {
 /// Duration can be negative. Internally duration is represented as
 /// milliseconds.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Default, Hash)]
-#[cfg_attr(feature = "serde", derive(::serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Duration(i64);
 
 impl Duration {
@@ -1911,5 +1909,82 @@ mod duration_test {
         let mut dur = Duration::minutes(734);
         dur %= Duration::minutes(100);
         assert_eq!(Duration::minutes(34), dur);
+    }
+}
+
+#[cfg(all(feature = "serde", test))]
+mod test {
+    use crate::Duration;
+    use crate::Time;
+    use crate::TimeWindow;
+
+    #[test]
+    fn serde_json_time() {
+        for expected in [Time::hours(7), Time::EPOCH, Time::MAX] {
+            let encoded = serde_json::to_string(&expected).unwrap();
+            let actual = serde_json::from_str(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_json_duration() {
+        for expected in [
+            Duration::millis(77777),
+            Duration::MAX,
+            Duration::ZERO,
+            -Duration::MAX,
+        ] {
+            let encoded = serde_json::to_string(&expected).unwrap();
+            let actual: Duration = serde_json::from_str(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_json_time_window() {
+        for expected in [
+            TimeWindow::new(Time::hours(7), Time::hours(19)),
+            TimeWindow::widest(),
+        ] {
+            let encoded = serde_json::to_string(&expected).unwrap();
+            let actual: TimeWindow = serde_json::from_str(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_bincode_time() {
+        for expected in [Time::hours(7), Time::EPOCH, Time::MAX] {
+            let encoded = bincode::serialize(&expected).unwrap();
+            let actual = bincode::deserialize(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_bincode_duration() {
+        for expected in [
+            Duration::millis(77777),
+            Duration::MAX,
+            Duration::ZERO,
+            -Duration::MAX,
+        ] {
+            let encoded = bincode::serialize(&expected).unwrap();
+            let actual: Duration = bincode::deserialize(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
+    }
+
+    #[test]
+    fn serde_bincode_time_window() {
+        for expected in [
+            TimeWindow::new(Time::hours(7), Time::hours(19)),
+            TimeWindow::widest(),
+        ] {
+            let encoded = bincode::serialize(&expected).unwrap();
+            let actual: TimeWindow = bincode::deserialize(&encoded).unwrap();
+            assert_eq!(expected, actual);
+        }
     }
 }
