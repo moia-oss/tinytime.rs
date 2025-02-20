@@ -8,6 +8,8 @@ edition = "2021"
 version = "0.13.1"
 rust-version = "1.81.0"
 license = "MIT OR Apache-2.0"
+keywords = ["time", "tiny", "low-overhead"]
+categories = ["date-and-time"]
 
 [features]
 rand = ["dep:rand"]
@@ -53,7 +55,7 @@ perf = { level = "warn", priority = -1 }
 style = { level = "warn", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
 
-cargo = { level = "allow", priority = -1 } # TODO
+cargo = { level = "deny", priority = -1 }
 todo = "warn"
 
 disallowed-types = "deny"
