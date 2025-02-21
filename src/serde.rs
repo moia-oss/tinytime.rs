@@ -1,9 +1,9 @@
 use core::fmt;
 use std::str::FromStr;
 
+use serde::Deserializer;
 use serde::de::Error;
 use serde::de::Visitor;
-use serde::Deserializer;
 
 use crate::Duration;
 use crate::Time;

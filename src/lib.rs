@@ -42,9 +42,9 @@ pub mod rand;
 pub mod serde;
 
 use core::fmt;
+use std::cmp::Ordering;
 use std::cmp::max;
 use std::cmp::min;
-use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Debug;
 use std::fmt::Display;
@@ -1479,11 +1479,7 @@ impl Display for DurationParseError {
 
 /// Work-around for `max` in `std` not being const
 const fn as_unsigned(x: i64) -> u64 {
-    if x >= 0 {
-        x as u64
-    } else {
-        0
-    }
+    if x >= 0 { x as u64 } else { 0 }
 }
 
 #[cfg(test)]

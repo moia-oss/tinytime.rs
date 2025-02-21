@@ -1,10 +1,10 @@
+use rand::Rng;
+use rand::distr::Distribution;
+use rand::distr::StandardUniform;
 use rand::distr::uniform::SampleBorrow;
 use rand::distr::uniform::SampleUniform;
 use rand::distr::uniform::UniformInt;
 use rand::distr::uniform::UniformSampler;
-use rand::distr::Distribution;
-use rand::distr::StandardUniform;
-use rand::Rng;
 
 use crate::Duration;
 use crate::Time;
