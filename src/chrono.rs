@@ -2,9 +2,9 @@ use core::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
+use chrono::DateTime;
 use chrono::format::DelayedFormat;
 use chrono::format::StrftimeItems;
-use chrono::DateTime;
 
 use crate::Time;
 use crate::TimeWindow;
