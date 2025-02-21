@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- add serde utility methods (#109)
+- Serde utility methods (#109)
 
 ## [0.14.0](https://github.com/moia-oss/tinytime.rs/compare/v0.13.1...v0.14.0) - 2025-02-20
 
