@@ -145,6 +145,18 @@ mod test {
         }
     }
 
+    // Why unit tests for bincode?
+    // In the past, we had a minor issue with how we supported serde:
+    // We were only supporting self-describing formats (such as JSON) and didn't
+    // support non-self-describing formats (such as bincode).
+    // Upon finding this,
+    // we removed the support to deserialize from different formats from within the
+    // deserializer, but kept the possibility to add custom
+    // (de)serialization.
+    // Types from this crate can still be (de)serialized with serde
+    // by using `serialize_with` as illustrated above in this file,
+    // for self-describing and non-self-describing formats.
+    // The following unit tests ensure that this option keeps working.
     #[test]
     fn serde_bincode_time() {
         for expected in [Time::hours(7), Time::EPOCH, Time::MAX] {
