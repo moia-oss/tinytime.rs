@@ -104,6 +104,8 @@ impl Visitor<'_> for DurationVisitor {
 
 #[cfg(test)]
 mod test {
+    use bincode::config;
+
     use crate::Duration;
     use crate::Time;
     use crate::TimeWindow;
@@ -146,8 +148,10 @@ mod test {
     #[test]
     fn serde_bincode_time() {
         for expected in [Time::hours(7), Time::EPOCH, Time::MAX] {
-            let encoded = bincode::serialize(&expected).unwrap();
-            let actual = bincode::deserialize(&encoded).unwrap();
+            let encoded = bincode::serde::encode_to_vec(expected, config::standard()).unwrap();
+            let actual = bincode::serde::decode_from_slice(&encoded, config::standard())
+                .unwrap()
+                .0;
             assert_eq!(expected, actual);
         }
     }
@@ -160,8 +164,10 @@ mod test {
             Duration::ZERO,
             -Duration::MAX,
         ] {
-            let encoded = bincode::serialize(&expected).unwrap();
-            let actual: Duration = bincode::deserialize(&encoded).unwrap();
+            let encoded = bincode::serde::encode_to_vec(expected, config::standard()).unwrap();
+            let actual: Duration = bincode::serde::decode_from_slice(&encoded, config::standard())
+                .unwrap()
+                .0;
             assert_eq!(expected, actual);
         }
     }
@@ -172,8 +178,11 @@ mod test {
             TimeWindow::new(Time::hours(7), Time::hours(19)),
             TimeWindow::widest(),
         ] {
-            let encoded = bincode::serialize(&expected).unwrap();
-            let actual: TimeWindow = bincode::deserialize(&encoded).unwrap();
+            let encoded = bincode::serde::encode_to_vec(expected, config::standard()).unwrap();
+            let actual: TimeWindow =
+                bincode::serde::decode_from_slice(&encoded, config::standard())
+                    .unwrap()
+                    .0;
             assert_eq!(expected, actual);
         }
     }
