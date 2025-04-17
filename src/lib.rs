@@ -70,6 +70,7 @@ use std::time::SystemTime;
 /// Low overhead time representation. Internally represented as milliseconds.
 #[derive(Eq, PartialEq, Hash, Ord, PartialOrd, Copy, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(::bincode::Encode, ::bincode::Decode))]
 pub struct Time(i64);
 
 impl Time {
@@ -324,6 +325,7 @@ impl Error for TimeWindowError {}
 /// correcting invalid use of the API (and setting end to start).
 #[derive(Clone, Debug, Eq, PartialEq, Default, Copy, Hash)]
 #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(::bincode::Encode, ::bincode::Decode))]
 pub struct TimeWindow {
     start: Time,
     end: Time,
@@ -937,6 +939,7 @@ impl From<(Time, Time)> for TimeWindow {
 /// milliseconds.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Default, Hash)]
 #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(::bincode::Encode, ::bincode::Decode))]
 pub struct Duration(i64);
 
 impl Duration {
