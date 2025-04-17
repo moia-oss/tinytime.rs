@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add optional bincode support ([#117](https://github.com/moia-oss/tinytime.rs/pull/117))
+- Optional bincode support ([#117](https://github.com/moia-oss/tinytime.rs/pull/117))
 
 ### Other
 
