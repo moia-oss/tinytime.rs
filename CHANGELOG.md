@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.2](https://github.com/moia-oss/tinytime.rs/compare/v0.14.1...v0.14.2) - 2025-04-17
+
+### Added
+
+- Add optional bincode support ([#117](https://github.com/moia-oss/tinytime.rs/pull/117))
+
+### Other
+
+- Document why bincode unit tests exist ([#116](https://github.com/moia-oss/tinytime.rs/pull/116))
+- Bump the cargo group across 1 directory with 3 updates ([#115](https://github.com/moia-oss/tinytime.rs/pull/115))
+- Bump chrono from 0.4.39 to 0.4.40 in the cargo group ([#113](https://github.com/moia-oss/tinytime.rs/pull/113))
+- update Rust to 1.85.0 and edition 2024 ([#111](https://github.com/moia-oss/tinytime.rs/pull/111))
+
 ## [0.14.1](https://github.com/moia-oss/tinytime.rs/compare/v0.14.0...v0.14.1) - 2025-02-21
 
 ### Added
