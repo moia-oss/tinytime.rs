@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.3](https://github.com/moia-oss/tinytime.rs/compare/v0.14.2...v0.14.3) - 2025-04-18
+
+### Other
+
+- Bump rand from 0.9.0 to 0.9.1 in the cargo group ([#118](https://github.com/moia-oss/tinytime.rs/pull/118))
+
 ## [0.14.2](https://github.com/moia-oss/tinytime.rs/compare/v0.14.1...v0.14.2) - 2025-04-17
 
 ### Added
