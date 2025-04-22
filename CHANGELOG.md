@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-- Bump rand from 0.9.0 to 0.9.1 in the cargo group ([#118](https://github.com/moia-oss/tinytime.rs/pull/118))
+- Bump rand from 0.9.0 to 0.9.1 ([#118](https://github.com/moia-oss/tinytime.rs/pull/118))
 
 ## [0.14.2](https://github.com/moia-oss/tinytime.rs/compare/v0.14.1...v0.14.2) - 2025-04-17
 
