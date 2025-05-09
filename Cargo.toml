@@ -19,7 +19,7 @@ serde = ["dep:serde"]
 
 [dependencies]
 bincode = { version = "2.0.1", features = ["derive"], default-features = false, optional = true }
-chrono = { version = "0.4.40", features = ["alloc"], default-features = false, optional = true }
+chrono = { version = "0.4.41", features = ["alloc"], default-features = false, optional = true }
 rand = { version = "0.9.1", features = ["thread_rng"], default-features = false, optional = true }
 serde = { version = "1.0.219", features = ["derive"], default-features = false, optional = true }
 
