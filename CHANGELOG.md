@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- add `impl From` for `chrono::TimeDelta` and `chrono::DateTime<Utc>` ([#125](https://github.com/moia-oss/tinytime.rs/pull/125))
+- add `impl From` for `chrono::TimeDelta` and `chrono::DateTime<Utc>` for feature flag `chrono` ([#125](https://github.com/moia-oss/tinytime.rs/pull/125))
 
 ### Other
 
