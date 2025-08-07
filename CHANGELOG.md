@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.14.4](https://github.com/moia-oss/tinytime.rs/compare/v0.14.3...v0.14.4) - 2025-08-07
+
+### Added
+
+- add `impl From` for `chrono::TimeDelta` and `chrono::DateTime<Utc>` ([#125](https://github.com/moia-oss/tinytime.rs/pull/125))
+
+### Other
+
+- use `ubuntu-24.04` GHA workflow runner ([#126](https://github.com/moia-oss/tinytime.rs/pull/126))
+- Bump serde_json from 1.0.141 to 1.0.142 in the cargo group ([#124](https://github.com/moia-oss/tinytime.rs/pull/124))
+- Bump the cargo group with 2 updates ([#123](https://github.com/moia-oss/tinytime.rs/pull/123))
+- update rust to 1.88.0 ([#122](https://github.com/moia-oss/tinytime.rs/pull/122))
+- Bump chrono from 0.4.40 to 0.4.41 in the cargo group ([#120](https://github.com/moia-oss/tinytime.rs/pull/120))
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [0.14.3](https://github.com/moia-oss/tinytime.rs/compare/v0.14.2...v0.14.3) - 2025-04-18
 
 ### Other
