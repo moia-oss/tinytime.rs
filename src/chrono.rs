@@ -3,9 +3,12 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 
 use chrono::DateTime;
+use chrono::TimeDelta;
+use chrono::Utc;
 use chrono::format::DelayedFormat;
 use chrono::format::StrftimeItems;
 
+use crate::Duration;
 use crate::Time;
 use crate::TimeWindow;
 impl Time {
@@ -89,5 +92,17 @@ impl Display for Time {
 impl Display for TimeWindow {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "[{}, {}]", self.start, self.end)
+    }
+}
+
+impl From<DateTime<Utc>> for Time {
+    fn from(dt: DateTime<Utc>) -> Self {
+        Time::millis(dt.timestamp_millis())
+    }
+}
+
+impl From<TimeDelta> for Duration {
+    fn from(td: TimeDelta) -> Self {
+        Duration::millis(td.num_milliseconds())
     }
 }
