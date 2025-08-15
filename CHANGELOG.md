@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.5](https://github.com/moia-oss/tinytime.rs/compare/v0.14.4...v0.14.5) - 2025-08-15
+
+### Other
+
+- Bump actions/checkout from 4 to 5 in the github-actions group ([#129](https://github.com/moia-oss/tinytime.rs/pull/129))
+- Use official release-plz GHA org action ([#127](https://github.com/moia-oss/tinytime.rs/pull/127))
+
 ## [0.14.4](https://github.com/moia-oss/tinytime.rs/compare/v0.14.3...v0.14.4) - 2025-08-07
 
 ### Added
