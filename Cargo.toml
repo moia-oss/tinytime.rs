@@ -24,7 +24,7 @@ rand = { version = "0.9.2", features = ["thread_rng"], default-features = false,
 serde = { version = "1.0.228", features = ["derive"], default-features = false, optional = true }
 
 [dev-dependencies]
-serde_json = "1.0.148"
+serde_json = "1.0.149"
 bincode = { version = "2.0.1", features = ["serde"] }
 
 [lints.rust]
