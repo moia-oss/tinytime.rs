@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::RngExt;
 use rand::distr::Distribution;
 use rand::distr::StandardUniform;
 use rand::distr::uniform::SampleBorrow;
@@ -10,7 +10,7 @@ use crate::Duration;
 use crate::Time;
 
 impl Distribution<Time> for StandardUniform {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Time {
+    fn sample<R: RngExt + ?Sized>(&self, rng: &mut R) -> Time {
         Time(rng.random())
     }
 }
@@ -37,7 +37,7 @@ impl UniformSampler for UniformTime {
         UniformInt::new_inclusive(low.borrow().0, high.borrow().0).map(Self)
     }
 
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+    fn sample<R: RngExt + ?Sized>(&self, rng: &mut R) -> Self::X {
         Time(self.0.sample(rng))
     }
 }
@@ -47,7 +47,7 @@ impl SampleUniform for Time {
 }
 
 impl Distribution<Duration> for StandardUniform {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Duration {
+    fn sample<R: RngExt + ?Sized>(&self, rng: &mut R) -> Duration {
         Duration(rng.random())
     }
 }
@@ -74,7 +74,7 @@ impl UniformSampler for UniformDuration {
         UniformInt::new_inclusive(low.borrow().0, high.borrow().0).map(Self)
     }
 
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+    fn sample<R: RngExt + ?Sized>(&self, rng: &mut R) -> Self::X {
         Duration(self.0.sample(rng))
     }
 }
