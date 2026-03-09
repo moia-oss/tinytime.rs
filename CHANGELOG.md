@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1](https://github.com/moia-oss/tinytime.rs/compare/v0.15.0...v0.15.1) - 2026-03-09
+
+### Other
+
+- update rust version ([#142](https://github.com/moia-oss/tinytime.rs/pull/142))
+
 ## [0.15.0](https://github.com/moia-oss/tinytime.rs/compare/v0.14.4...v0.15.0) - 2026-03-09
 
 ### Other
