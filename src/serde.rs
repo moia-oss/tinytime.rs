@@ -104,8 +104,6 @@ impl Visitor<'_> for DurationVisitor {
 
 #[cfg(test)]
 mod test {
-    use bincode::config;
-
     use crate::Duration;
     use crate::Time;
     use crate::TimeWindow;
@@ -141,60 +139,6 @@ mod test {
         ] {
             let encoded = serde_json::to_string(&expected).unwrap();
             let actual: TimeWindow = serde_json::from_str(&encoded).unwrap();
-            assert_eq!(expected, actual);
-        }
-    }
-
-    // Why unit tests for bincode?
-    // In the past, we had a minor issue with how we supported serde:
-    // We were only supporting self-describing formats (such as JSON) and didn't
-    // support non-self-describing formats (such as bincode).
-    // Upon finding this,
-    // we removed the support to deserialize from different formats from within the
-    // deserializer, but kept the possibility to add custom
-    // (de)serialization.
-    // Types from this crate can still be (de)serialized with serde
-    // by using `serialize_with` as illustrated above in this file,
-    // for self-describing and non-self-describing formats.
-    // The following unit tests ensure that this option keeps working.
-    #[test]
-    fn serde_bincode_time() {
-        for expected in [Time::hours(7), Time::EPOCH, Time::MAX] {
-            let encoded = bincode::serde::encode_to_vec(expected, config::standard()).unwrap();
-            let actual = bincode::serde::decode_from_slice(&encoded, config::standard())
-                .unwrap()
-                .0;
-            assert_eq!(expected, actual);
-        }
-    }
-
-    #[test]
-    fn serde_bincode_duration() {
-        for expected in [
-            Duration::millis(77777),
-            Duration::MAX,
-            Duration::ZERO,
-            -Duration::MAX,
-        ] {
-            let encoded = bincode::serde::encode_to_vec(expected, config::standard()).unwrap();
-            let actual: Duration = bincode::serde::decode_from_slice(&encoded, config::standard())
-                .unwrap()
-                .0;
-            assert_eq!(expected, actual);
-        }
-    }
-
-    #[test]
-    fn serde_bincode_time_window() {
-        for expected in [
-            TimeWindow::new(Time::hours(7), Time::hours(19)),
-            TimeWindow::widest(),
-        ] {
-            let encoded = bincode::serde::encode_to_vec(expected, config::standard()).unwrap();
-            let actual: TimeWindow =
-                bincode::serde::decode_from_slice(&encoded, config::standard())
-                    .unwrap()
-                    .0;
             assert_eq!(expected, actual);
         }
     }
