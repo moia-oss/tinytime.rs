@@ -138,3 +138,58 @@ impl From<SignedDuration> for Duration {
         Duration::millis(millis_conv_result.unwrap_or(if millis < 0 { i64::MIN } else { i64::MAX }))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Duration;
+    use crate::Time;
+
+    #[test]
+    fn test_parse_from_rfc3339() {
+        struct TestCase {
+            name: &'static str,
+            input: &'static str,
+            expected: Time,
+        }
+
+        let tests = vec![
+            TestCase {
+                name: "EPOCH Z",
+                input: "1970-01-01T00:00:00Z",
+                expected: Time::EPOCH,
+            },
+            TestCase {
+                name: "EPOCH UTC offset",
+                input: "1970-01-01T00:00:00+00:00",
+                expected: Time::EPOCH,
+            },
+            TestCase {
+                name: "positive offset",
+                input: "1970-01-01T01:00:00+01:00",
+                expected: Time::EPOCH,
+            },
+            TestCase {
+                name: "negative offset",
+                input: "1969-12-31T23:00:00-01:00",
+                expected: Time::EPOCH,
+            },
+            TestCase {
+                name: "sub-millisecond truncation",
+                input: "1970-01-01T02:51:07.123999Z",
+                expected: Time::hours(2)
+                    + Duration::minutes(51)
+                    + Duration::seconds(7)
+                    + Duration::millis(123),
+            },
+        ];
+
+        for test in tests {
+            assert_eq!(
+                Ok(test.expected),
+                Time::parse_from_rfc3339(test.input).map_err(|error| error.to_string()),
+                "parse_from_rfc3339 failed for test '{}'",
+                test.name
+            );
+        }
+    }
+}
