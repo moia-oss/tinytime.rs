@@ -1550,6 +1550,12 @@ mod time_test {
                 "format failed for test '{}'",
                 test.name
             );
+            assert_eq!(
+                test.expected,
+                test.input.to_string(),
+                "Display failed for test '{}'",
+                test.name
+            );
         }
     }
 

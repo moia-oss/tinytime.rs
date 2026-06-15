@@ -10,6 +10,8 @@ use crate::Duration;
 use crate::Time;
 use crate::TimeWindow;
 
+const RFC3339_FORMAT: &str = "%Y-%m-%dT%H:%M:%S+00:00";
+
 /// A displayable formatted [`Time`].
 pub struct FormattedTime<'a> {
     inner: FormattedTimeInner<'a>,
@@ -103,14 +105,13 @@ impl Time {
     /// ```
     #[must_use]
     pub fn to_rfc3339(self) -> String {
-        self.format("%Y-%m-%dT%H:%M:%S+00:00").to_string()
+        self.format(RFC3339_FORMAT).to_string()
     }
 }
 
 impl Display for Time {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let rfc3339_string = self.to_rfc3339();
-        write!(f, "{rfc3339_string}")
+        Display::fmt(&self.format(RFC3339_FORMAT), f)
     }
 }
 
