@@ -1534,7 +1534,7 @@ mod time_test {
             TestCase {
                 name: "i64::MIN",
                 input: Time::millis(i64::MIN),
-                expected: "∞".to_string(),
+                expected: "-∞".to_string(),
             },
         ];
         for test in tests {

@@ -17,7 +17,8 @@ pub struct FormattedTime<'a> {
 
 enum FormattedTimeInner<'a> {
     Finite(strtime::Display<'a>),
-    Infinity,
+    PlusInfinity,
+    MinusInfinity,
 }
 
 impl fmt::Debug for FormattedTime<'_> {
@@ -30,7 +31,8 @@ impl Display for FormattedTime<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match &self.inner {
             FormattedTimeInner::Finite(value) => Display::fmt(value, f),
-            FormattedTimeInner::Infinity => f.write_str("∞"),
+            FormattedTimeInner::PlusInfinity => f.write_str("∞"),
+            FormattedTimeInner::MinusInfinity => f.write_str("-∞"),
         }
     }
 }
@@ -40,19 +42,26 @@ impl Time {
     /// [`jiff::Timestamp::strftime()`].
     ///
     /// Values outside jiff's timestamp range, such as `Time::MAX`, are
-    /// formatted as "∞".
+    /// formatted as "∞" or "-∞".
     ///
     /// # Example
     ///
     /// ```
     /// use tinytime::Time;
     /// assert_eq!("∞", Time::MAX.format("whatever").to_string());
+    /// assert_eq!("-∞", Time::millis(i64::MIN).format("whatever").to_string());
     /// ```
     #[must_use]
     pub fn format<'a>(&self, fmt: &'a str) -> FormattedTime<'a> {
         let inner = match Timestamp::from_millisecond(self.0) {
             Ok(timestamp) => FormattedTimeInner::Finite(timestamp.strftime(fmt)),
-            Err(_) => FormattedTimeInner::Infinity,
+            Err(_) => {
+                if self.0.is_positive() {
+                    FormattedTimeInner::PlusInfinity
+                } else {
+                    FormattedTimeInner::MinusInfinity
+                }
+            }
         };
 
         FormattedTime { inner }
@@ -74,7 +83,7 @@ impl Time {
     ///     Time::parse_from_rfc3339("1970-01-01T02:51:07.123999Z").unwrap()
     /// );
     /// ```
-    pub fn parse_from_rfc3339(s: &str) -> Result<Time, ::jiff::Error> {
+    pub fn parse_from_rfc3339(s: &str) -> Result<Time, jiff::Error> {
         s.parse::<Timestamp>()
             .map(|timestamp| Time::millis(timestamp.as_millisecond()))
     }
@@ -83,13 +92,14 @@ impl Time {
     /// 1996-12-19T16:39:57+00:00.
     ///
     /// Values outside jiff's timestamp range, such as `Time::MAX`, are
-    /// formatted as "∞".
+    /// formatted as "∞" or "-∞".
     ///
     /// # Example
     ///
     /// ```
     /// use tinytime::Time;
     /// assert_eq!("∞", Time::MAX.to_rfc3339());
+    /// assert_eq!("-∞", Time::millis(i64::MIN).to_rfc3339());
     /// ```
     #[must_use]
     pub fn to_rfc3339(self) -> String {
@@ -118,11 +128,12 @@ impl From<Timestamp> for Time {
 
 impl From<SignedDuration> for Duration {
     fn from(duration: SignedDuration) -> Self {
+        let millis = duration.as_millis();
+        let millis_conv_result = i64::try_from(millis);
         debug_assert!(
-            i64::try_from(duration.as_millis()).is_ok(),
+            millis_conv_result.is_ok(),
             "Input jiff::SignedDuration ({duration:?}) is too large to be converted to tinytime::Duration"
         );
-        #[expect(clippy::cast_possible_truncation, reason = "expected behavior")]
-        Duration::millis(duration.as_millis() as i64)
+        Duration::millis(millis_conv_result.unwrap_or(if millis < 0 { i64::MIN } else { i64::MAX }))
     }
 }
