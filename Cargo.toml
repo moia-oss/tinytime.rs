@@ -12,12 +12,12 @@ keywords = ["time", "tiny", "low-overhead"]
 categories = ["date-and-time"]
 
 [features]
-chrono = ["dep:chrono"]
+jiff = ["dep:jiff"]
 rand = ["dep:rand"]
 serde = ["dep:serde"]
 
 [dependencies]
-chrono = { version = "0.4.45", features = ["alloc"], default-features = false, optional = true }
+jiff = { version = "0.2.28", features = ["alloc"], default-features = false, optional = true }
 rand = { version = "0.10.1", features = ["thread_rng"], default-features = false, optional = true }
 serde = { version = "1.0.228", features = ["derive"], default-features = false, optional = true }
 
