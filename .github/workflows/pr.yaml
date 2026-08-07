@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: taiki-e/install-action@v2.85.3
+      - uses: taiki-e/install-action@v2.85.8
         with:
           tool: just
       - run: echo "RUST_TOOLCHAIN=$(just rust-version)" >> $GITHUB_ENV
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: taiki-e/install-action@v2.85.3
+      - uses: taiki-e/install-action@v2.85.8
         with:
           tool: just
       - run: |
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: taiki-e/install-action@v2.85.3
+      - uses: taiki-e/install-action@v2.85.8
         with:
           tool: just, cargo-binstall
       - run: echo "RUST_TOOLCHAIN=$(just rust-version)" >> $GITHUB_ENV
