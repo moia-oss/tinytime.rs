@@ -34,8 +34,8 @@
 
 //! ```
 
-#[cfg(feature = "chrono")]
-pub mod chrono;
+#[cfg(feature = "jiff")]
+pub mod jiff;
 #[cfg(feature = "rand")]
 pub mod rand;
 #[cfg(feature = "serde")]
@@ -1487,6 +1487,7 @@ mod time_test {
     use crate::Duration;
     use crate::Time;
 
+    #[cfg(feature = "jiff")]
     #[test]
     fn test_display() {
         struct TestCase {
@@ -1518,7 +1519,7 @@ mod time_test {
             TestCase {
                 name: "very large",
                 input: Time::seconds(i64::from(i32::MAX) * 3500),
-                expected: "+240148-08-31T19:28:20+00:00".to_string(),
+                expected: "∞".to_string(),
             },
             TestCase {
                 name: "MAX",
@@ -1533,7 +1534,7 @@ mod time_test {
             TestCase {
                 name: "i64::MIN",
                 input: Time::millis(i64::MIN),
-                expected: "∞".to_string(),
+                expected: "-∞".to_string(),
             },
         ];
         for test in tests {
@@ -1547,6 +1548,12 @@ mod time_test {
                 test.expected,
                 test.input.format("%Y-%m-%dT%H:%M:%S+00:00").to_string(),
                 "format failed for test '{}'",
+                test.name
+            );
+            assert_eq!(
+                test.expected,
+                test.input.to_string(),
+                "Display failed for test '{}'",
                 test.name
             );
         }
@@ -1661,6 +1668,7 @@ mod duration_test {
         assert_eq!("-1m1s", Duration::seconds(-61).to_string());
     }
 
+    #[cfg(feature = "jiff")]
     #[test]
     fn test_time_window_display() {
         assert_eq!(
