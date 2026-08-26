@@ -11,6 +11,9 @@ license = "MIT OR Apache-2.0"
 keywords = ["time", "tiny", "low-overhead"]
 categories = ["date-and-time"]
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 jiff = ["dep:jiff"]
 rand = ["dep:rand"]
