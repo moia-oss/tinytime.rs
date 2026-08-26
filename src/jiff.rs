@@ -10,8 +10,6 @@ use crate::Duration;
 use crate::Time;
 use crate::TimeWindow;
 
-const RFC3339_FORMAT: &str = "%Y-%m-%dT%H:%M:%S+00:00";
-
 /// A displayable formatted [`Time`].
 pub struct FormattedTime<'a> {
     inner: FormattedTimeInner<'a>,
@@ -91,7 +89,10 @@ impl Time {
     }
 
     /// Returns an RFC 3339 and ISO 8601 date and time string such as
-    /// 1996-12-19T16:39:57+00:00.
+    /// 1996-12-19T16:39:57Z.
+    ///
+    /// Formatting is forwarded to the [`Display`] implementation of
+    /// [`jiff::Timestamp`].
     ///
     /// Values outside jiff's timestamp range, such as `Time::MAX`, are
     /// formatted as "∞" or "-∞".
@@ -100,18 +101,25 @@ impl Time {
     ///
     /// ```
     /// use tinytime::Time;
+    /// assert_eq!(
+    ///     "1996-12-19T16:39:57Z",
+    ///     Time::seconds(851_013_597).to_rfc3339()
+    /// );
     /// assert_eq!("∞", Time::MAX.to_rfc3339());
     /// assert_eq!("-∞", Time::millis(i64::MIN).to_rfc3339());
     /// ```
     #[must_use]
     pub fn to_rfc3339(self) -> String {
-        self.format(RFC3339_FORMAT).to_string()
+        self.to_string()
     }
 }
 
 impl Display for Time {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Display::fmt(&self.format(RFC3339_FORMAT), f)
+        match Timestamp::from_millisecond(self.0) {
+            Ok(timestamp) => Display::fmt(&timestamp, f),
+            Err(_) => f.write_str(if self.0.is_positive() { "∞" } else { "-∞" }),
+        }
     }
 }
 
@@ -156,22 +164,27 @@ mod tests {
             TestCase {
                 name: "EPOCH",
                 input: Time::EPOCH,
-                expected: "1970-01-01T00:00:00+00:00".to_string(),
+                expected: "1970-01-01T00:00:00Z".to_string(),
             },
             TestCase {
                 name: "i16::MAX + 1",
                 input: Time::seconds(i64::from(i16::MAX) + 1),
-                expected: "1970-01-01T09:06:08+00:00".to_string(),
+                expected: "1970-01-01T09:06:08Z".to_string(),
             },
             TestCase {
                 name: "i32::MAX + 1",
                 input: Time::seconds(i64::from(i32::MAX) + 1),
-                expected: "2038-01-19T03:14:08+00:00".to_string(),
+                expected: "2038-01-19T03:14:08Z".to_string(),
             },
             TestCase {
                 name: "u32::MAX + 1",
                 input: Time::seconds(i64::from(u32::MAX) + 1),
-                expected: "2106-02-07T06:28:16+00:00".to_string(),
+                expected: "2106-02-07T06:28:16Z".to_string(),
+            },
+            TestCase {
+                name: "sub-second",
+                input: Time::millis(1_707_238_427_962),
+                expected: "2024-02-06T16:53:47.962Z".to_string(),
             },
             TestCase {
                 name: "very large",
@@ -186,7 +199,7 @@ mod tests {
             TestCase {
                 name: "i16::MIN",
                 input: Time::seconds(i64::from(i16::MIN)),
-                expected: "1969-12-31T14:53:52+00:00".to_string(),
+                expected: "1969-12-31T14:53:52Z".to_string(),
             },
             TestCase {
                 name: "i64::MIN",
@@ -203,12 +216,6 @@ mod tests {
             );
             assert_eq!(
                 test.expected,
-                test.input.format("%Y-%m-%dT%H:%M:%S+00:00").to_string(),
-                "format failed for test '{}'",
-                test.name
-            );
-            assert_eq!(
-                test.expected,
                 test.input.to_string(),
                 "Display failed for test '{}'",
                 test.name
@@ -217,13 +224,52 @@ mod tests {
     }
 
     #[test]
+    fn test_format() {
+        struct TestCase {
+            name: &'static str,
+            input: Time,
+            expected: String,
+        }
+        let tests = vec![
+            TestCase {
+                name: "EPOCH",
+                input: Time::EPOCH,
+                expected: "1970-01-01T00:00:00+00:00".to_string(),
+            },
+            TestCase {
+                name: "sub-second is truncated",
+                input: Time::millis(1_707_238_427_962),
+                expected: "2024-02-06T16:53:47+00:00".to_string(),
+            },
+            TestCase {
+                name: "MAX",
+                input: Time::MAX,
+                expected: "∞".to_string(),
+            },
+            TestCase {
+                name: "i64::MIN",
+                input: Time::millis(i64::MIN),
+                expected: "-∞".to_string(),
+            },
+        ];
+        for test in tests {
+            assert_eq!(
+                test.expected,
+                test.input.format("%Y-%m-%dT%H:%M:%S+00:00").to_string(),
+                "format failed for test '{}'",
+                test.name
+            );
+        }
+    }
+
+    #[test]
     fn test_time_window_display() {
         assert_eq!(
-            "[1970-01-01T00:00:00+00:00, ∞]",
+            "[1970-01-01T00:00:00Z, ∞]",
             TimeWindow::new(Time::EPOCH, Time::MAX).to_string()
         );
         assert_eq!(
-            "[1970-01-01T01:00:00+00:00, 2024-02-06T16:53:47+00:00]",
+            "[1970-01-01T01:00:00Z, 2024-02-06T16:53:47.962Z]",
             TimeWindow::new(Time::hours(1), Time::millis(1_707_238_427_962)).to_string()
         );
     }

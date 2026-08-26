@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [**breaking**] Replace the optional `chrono` feature with a `jiff` feature.
 - [**breaking**] When the `jiff` feature is enabled, formatting `Time` values outside jiff's supported timestamp range now yields "∞" / "-∞" (instead of a formatted date or always "∞").
+- [**breaking**] `Time::to_rfc3339()` and `Display for Time` now use jiff's RFC 3339 formatting, which renders UTC as "Z" and includes subsecond digits, e.g. "2024-02-06T16:53:47.962Z" instead of "2024-02-06T16:53:47+00:00".
 ## [0.15.0](https://github.com/moia-oss/tinytime.rs/compare/v0.14.4...v0.15.0) - 2026-03-09
 
 ### Other
