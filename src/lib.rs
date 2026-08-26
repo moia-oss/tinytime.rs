@@ -277,8 +277,8 @@ impl From<SystemTime> for Time {
 
 impl Debug for Time {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        // This implementation is tailor-made, because NaiveDateTime does not support
-        // the full range of Time. For some Time instances it wouldn't be
+        // This implementation is tailor-made, because jiff's Timestamp does not
+        // support the full range of Time. For some Time instances it wouldn't be
         // possible to reconstruct them based on the Debug-representation ('∞').
         let positive = self.0 >= 0;
         let mut total = self.0.unsigned_abs();
