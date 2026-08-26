@@ -1,6 +1,7 @@
 use core::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
+use std::num::TryFromIntError;
 
 use ::jiff::SignedDuration;
 use ::jiff::Timestamp;
@@ -102,20 +103,19 @@ impl From<Timestamp> for Time {
     }
 }
 
-impl From<SignedDuration> for Duration {
-    fn from(duration: SignedDuration) -> Self {
-        let millis = duration.as_millis();
-        let millis_conv_result = i64::try_from(millis);
-        debug_assert!(
-            millis_conv_result.is_ok(),
-            "Input jiff::SignedDuration ({duration:?}) is too large to be converted to tinytime::Duration"
-        );
-        Duration::millis(millis_conv_result.unwrap_or(if millis < 0 { i64::MIN } else { i64::MAX }))
+impl TryFrom<SignedDuration> for Duration {
+    type Error = TryFromIntError;
+
+    /// Fails if the duration's milliseconds don't fit into an [`i64`].
+    fn try_from(duration: SignedDuration) -> Result<Self, Self::Error> {
+        i64::try_from(duration.as_millis()).map(Duration::millis)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use ::jiff::SignedDuration;
+
     use crate::Duration;
     use crate::Time;
     use crate::TimeWindow;
@@ -239,6 +239,20 @@ mod tests {
             "[1970-01-01T01:00:00Z, 2024-02-06T16:53:47.962Z]",
             TimeWindow::new(Time::hours(1), Time::millis(1_707_238_427_962)).to_string()
         );
+    }
+
+    #[test]
+    fn test_duration_from_signed_duration() {
+        assert_eq!(
+            Ok(Duration::seconds(7) + Duration::millis(123)),
+            Duration::try_from(SignedDuration::new(7, 123_999_999))
+        );
+        assert_eq!(
+            Ok(Duration::seconds(-7) - Duration::millis(123)),
+            Duration::try_from(SignedDuration::new(-7, -123_999_999))
+        );
+        assert!(Duration::try_from(SignedDuration::MAX).is_err());
+        assert!(Duration::try_from(SignedDuration::MIN).is_err());
     }
 
     #[test]
