@@ -10,33 +10,6 @@ use crate::Duration;
 use crate::Time;
 use crate::TimeWindow;
 
-/// A displayable formatted [`Time`].
-pub struct FormattedTime<'a> {
-    inner: FormattedTimeInner<'a>,
-}
-
-enum FormattedTimeInner<'a> {
-    Finite(strtime::Display<'a>),
-    PlusInfinity,
-    MinusInfinity,
-}
-
-impl fmt::Debug for FormattedTime<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Display::fmt(self, f)
-    }
-}
-
-impl Display for FormattedTime<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match &self.inner {
-            FormattedTimeInner::Finite(value) => Display::fmt(value, f),
-            FormattedTimeInner::PlusInfinity => f.write_str("∞"),
-            FormattedTimeInner::MinusInfinity => f.write_str("-∞"),
-        }
-    }
-}
-
 impl Time {
     /// The function format string is forwarded to
     /// [`jiff::Timestamp::strftime()`].
@@ -52,19 +25,13 @@ impl Time {
     /// assert_eq!("-∞", Time::millis(i64::MIN).format("whatever").to_string());
     /// ```
     #[must_use]
-    pub fn format<'a>(&self, fmt: &'a str) -> FormattedTime<'a> {
-        let inner = match Timestamp::from_millisecond(self.0) {
-            Ok(timestamp) => FormattedTimeInner::Finite(timestamp.strftime(fmt)),
-            Err(_) => {
-                if self.0.is_positive() {
-                    FormattedTimeInner::PlusInfinity
-                } else {
-                    FormattedTimeInner::MinusInfinity
-                }
-            }
-        };
-
-        FormattedTime { inner }
+    pub fn format<'a>(&self, fmt: &'a str) -> strtime::Display<'a> {
+        if let Ok(timestamp) = Timestamp::from_millisecond(self.0) {
+            timestamp.strftime(fmt)
+        } else {
+            let infinity = if self.0.is_positive() { "∞" } else { "-∞" };
+            Timestamp::UNIX_EPOCH.strftime(infinity)
+        }
     }
 
     /// Parses an RFC 3339 date and time string into a [Time] instance.
