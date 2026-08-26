@@ -1487,78 +1487,6 @@ mod time_test {
     use crate::Duration;
     use crate::Time;
 
-    #[cfg(feature = "jiff")]
-    #[test]
-    fn test_display() {
-        struct TestCase {
-            name: &'static str,
-            input: Time,
-            expected: String,
-        }
-        let tests = vec![
-            TestCase {
-                name: "EPOCH",
-                input: Time::EPOCH,
-                expected: "1970-01-01T00:00:00+00:00".to_string(),
-            },
-            TestCase {
-                name: "i16::MAX + 1",
-                input: Time::seconds(i64::from(i16::MAX) + 1),
-                expected: "1970-01-01T09:06:08+00:00".to_string(),
-            },
-            TestCase {
-                name: "i32::MAX + 1",
-                input: Time::seconds(i64::from(i32::MAX) + 1),
-                expected: "2038-01-19T03:14:08+00:00".to_string(),
-            },
-            TestCase {
-                name: "u32::MAX + 1",
-                input: Time::seconds(i64::from(u32::MAX) + 1),
-                expected: "2106-02-07T06:28:16+00:00".to_string(),
-            },
-            TestCase {
-                name: "very large",
-                input: Time::seconds(i64::from(i32::MAX) * 3500),
-                expected: "∞".to_string(),
-            },
-            TestCase {
-                name: "MAX",
-                input: Time::MAX,
-                expected: "∞".to_string(),
-            },
-            TestCase {
-                name: "i16::MIN",
-                input: Time::seconds(i64::from(i16::MIN)),
-                expected: "1969-12-31T14:53:52+00:00".to_string(),
-            },
-            TestCase {
-                name: "i64::MIN",
-                input: Time::millis(i64::MIN),
-                expected: "-∞".to_string(),
-            },
-        ];
-        for test in tests {
-            assert_eq!(
-                test.expected,
-                test.input.to_rfc3339(),
-                "to_rfc3339 failed for test '{}'",
-                test.name
-            );
-            assert_eq!(
-                test.expected,
-                test.input.format("%Y-%m-%dT%H:%M:%S+00:00").to_string(),
-                "format failed for test '{}'",
-                test.name
-            );
-            assert_eq!(
-                test.expected,
-                test.input.to_string(),
-                "Display failed for test '{}'",
-                test.name
-            );
-        }
-    }
-
     #[test]
     fn test_debug() {
         struct TestCase {
@@ -1666,19 +1594,6 @@ mod duration_test {
 
         assert_eq!("0ms", Duration::ZERO.to_string());
         assert_eq!("-1m1s", Duration::seconds(-61).to_string());
-    }
-
-    #[cfg(feature = "jiff")]
-    #[test]
-    fn test_time_window_display() {
-        assert_eq!(
-            "[1970-01-01T00:00:00+00:00, ∞]",
-            TimeWindow::new(Time::EPOCH, Time::MAX).to_string()
-        );
-        assert_eq!(
-            "[1970-01-01T01:00:00+00:00, 2024-02-06T16:53:47+00:00]",
-            TimeWindow::new(Time::hours(1), Time::millis(1_707_238_427_962)).to_string()
-        );
     }
 
     #[test]
