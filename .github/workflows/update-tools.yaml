@@ -1,0 +1,80 @@
+name: Update Tool Versions
+
+on:
+  schedule:
+    - cron: '0 7 1 * *' # Runs at 7 AM on the 1st of every month
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  update-rust:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Get latest Rust version
+        id: get-rust-version
+        run: |
+          set -o pipefail
+          LATEST_RUST_VERSION=$(curl -s https://api.github.com/repos/rust-lang/rust/releases/latest | jq -r .tag_name | sed 's/^v//')
+          echo "latest_version=$LATEST_RUST_VERSION" >> $GITHUB_OUTPUT
+          CURRENT_RUST_VERSION=$(grep 'channel' rust-toolchain.toml | sed -E 's/channel *= *"([^"]+)".*/\1/')
+          echo "current_version=$CURRENT_RUST_VERSION" >> $GITHUB_OUTPUT
+          # Get current date for nightly
+          CURRENT_DATE=$(date +"%Y-%m-%d")
+          echo "nightly_date=$CURRENT_DATE" >> $GITHUB_OUTPUT
+          # Get current nightly version
+          CURRENT_NIGHTLY_VERSION=$(grep 'channel' rust-toolchain-nightly.toml | sed -E 's/channel *= *"([^"]+)".*/\1/')
+          echo "current_nightly_version=$CURRENT_NIGHTLY_VERSION" >> $GITHUB_OUTPUT
+      - name: Update Rust version in rust-toolchain.toml
+        if: steps.get-rust-version.outputs.current_version != steps.get-rust-version.outputs.latest_version
+        run: |
+          sed -i 's/channel = "[^"]*"/channel = "${{ steps.get-rust-version.outputs.latest_version }}"/g' rust-toolchain.toml
+          sed -i 's/channel = "[^"]*"/channel = "nightly-${{ steps.get-rust-version.outputs.nightly_date }}"/g' rust-toolchain-nightly.toml
+      - name: Create Pull Request for Rust
+        if: steps.get-rust-version.outputs.current_version != steps.get-rust-version.outputs.latest_version
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          commit-message: "chore: update Rust versions"
+          title: "chore: update Rust versions"
+          body: |
+            This PR includes the following changes:
+
+            - Update stable Rust version to ${{ steps.get-rust-version.outputs.latest_version }}
+            - Update nightly Rust version to nightly-${{ steps.get-rust-version.outputs.nightly_date }}
+
+            This is an automated PR created by the update-tools GitHub Action.
+          branch: update-rust-version
+          token: ${{ secrets.BOT_ACCOUNT_PAT }}
+          delete-branch: true
+
+  update-mise-tools:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install: false
+          minimum_release_age: 14d
+      - name: Update mise-managed tools
+        run: mise upgrade --local --bump --yes
+      - name: Create Pull Request for mise tools
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          commit-message: "chore: update mise-managed tools"
+          title: "chore: update mise-managed tools"
+          body: |
+            This PR updates non-Rust tool versions in `mise.toml` using:
+
+            ```bash
+            mise upgrade --local --bump --yes
+            ```
+
+            This is an automated PR created by the update-tools GitHub Action.
+          branch: update-mise-tools
+          token: ${{ secrets.BOT_ACCOUNT_PAT }}
+          delete-branch: true
