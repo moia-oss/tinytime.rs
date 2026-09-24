@@ -1,0 +1,7 @@
+[tools]
+just = "1.58.0"
+pinact = "5.0.0"
+cargo-msrv = "0.19.3"
+
+[settings]
+minimum_release_age = "14d"
