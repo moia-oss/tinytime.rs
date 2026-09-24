@@ -6,9 +6,10 @@ use serde::de::Error;
 use serde::de::Visitor;
 
 use crate::Duration;
+#[cfg(feature = "jiff")]
 use crate::Time;
 
-#[cfg(feature = "chrono")]
+#[cfg(feature = "jiff")]
 impl Time {
     /// Helper method for deserializing an RFC 3339 string with `serde`.
     ///
@@ -38,10 +39,10 @@ impl Time {
     }
 }
 
-#[cfg(feature = "chrono")]
+#[cfg(feature = "jiff")]
 struct TimeVisitor;
 
-#[cfg(feature = "chrono")]
+#[cfg(feature = "jiff")]
 impl Visitor<'_> for TimeVisitor {
     type Value = Time;
 

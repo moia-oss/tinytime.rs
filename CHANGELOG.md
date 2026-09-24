@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- [**breaking**] Replace the optional `chrono` feature with a `jiff` feature.
+- [**breaking**] When the `jiff` feature is enabled, formatting `Time` values outside jiff's supported timestamp range now yields "∞" / "-∞" (instead of a formatted date or always "∞").
+- [**breaking**] `Time::to_rfc3339()` and `Display for Time` now use jiff's RFC 3339 formatting, which renders UTC as "Z" and includes subsecond digits, e.g. "2024-02-06T16:53:47.962Z" instead of "2024-02-06T16:53:47+00:00".
+- [**breaking**] `Time::format()` returns `jiff::fmt::strtime::Display` instead of `chrono::format::DelayedFormat`. The value panics when displayed if the format string contains a specifier that jiff doesn't support, most notably `%v` and `%+`.
+- [**breaking**] `Time::format()` renders `%Z` as the literal "%Z", because a `jiff::Timestamp` carries no time zone. `%f` prints the fractional second with as many digits as are non-zero, whereas chrono always printed nine.
+- [**breaking**] `Time::parse_from_rfc3339()` returns `jiff::Error` instead of `chrono::ParseError`. Unlike `chrono::ParseError`, `jiff::Error` doesn't implement `PartialEq`.
+- [**breaking**] `Time::parse_from_rfc3339()` truncates any precision below milliseconds towards zero, i.e. towards the epoch. For instants before the epoch that yields the millisecond after the parsed instant, e.g. "1969-12-31T23:59:59.999999Z" parses to `Time::EPOCH`.
+- [**breaking**] Replace `impl From<chrono::TimeDelta> for Duration`, which was infallible, with `impl TryFrom<jiff::SignedDuration> for Duration`, which fails if the duration's milliseconds don't fit into an `i64`.
+- [**breaking**] Replace `impl From<chrono::DateTime<chrono::Utc>> for Time` with `impl From<jiff::Timestamp> for Time`.
+
 ## [0.15.0](https://github.com/moia-oss/tinytime.rs/compare/v0.14.4...v0.15.0) - 2026-03-09
 
 ### Other
