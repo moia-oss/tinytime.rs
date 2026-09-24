@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1](https://github.com/moia-oss/tinytime.rs/compare/v0.16.0...v0.16.1) - 2026-09-24
+
+### Other
+
+- Bump jiff from 0.2.28 to 0.2.35 in the cargo group ([#161](https://github.com/moia-oss/tinytime.rs/pull/161))
+- improve housekeeping setup ([#159](https://github.com/moia-oss/tinytime.rs/pull/159))
+
 ## [0.16.0](https://github.com/moia-oss/tinytime.rs/compare/v0.15.0...v0.16.0) - 2026-09-24
 
 ### Other
