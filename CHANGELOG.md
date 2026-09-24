@@ -12,12 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 
 - Replace chrono feature with jiff ([#148](https://github.com/moia-oss/tinytime.rs/pull/148))
-- Bump taiki-e/install-action from 2.86.7 to 2.87.3 in the github-actions group ([#157](https://github.com/moia-oss/tinytime.rs/pull/157))
-- Bump taiki-e/install-action from 2.86.3 to 2.86.7 in the github-actions group ([#156](https://github.com/moia-oss/tinytime.rs/pull/156))
-- Bump taiki-e/install-action from 2.85.11 to 2.86.3 in the github-actions group ([#155](https://github.com/moia-oss/tinytime.rs/pull/155))
-- Bump taiki-e/install-action from 2.85.8 to 2.85.11 in the github-actions group ([#154](https://github.com/moia-oss/tinytime.rs/pull/154))
-- Bump taiki-e/install-action from 2.85.3 to 2.85.8 in the github-actions group ([#153](https://github.com/moia-oss/tinytime.rs/pull/153))
-- Bump taiki-e/install-action from 2 to 2.85.3 in the github-actions group ([#152](https://github.com/moia-oss/tinytime.rs/pull/152))
+- Bump taiki-e/install-action from 2 to 2.87.3 in the github-actions group ([#152](https://github.com/moia-oss/tinytime.rs/pull/152))
 - Bump the cargo group across 1 directory with 3 updates ([#151](https://github.com/moia-oss/tinytime.rs/pull/151))
 - Bump actions/checkout from 6 to 7 in the github-actions group ([#149](https://github.com/moia-oss/tinytime.rs/pull/149))
 - Bump the cargo group across 1 directory with 2 updates ([#146](https://github.com/moia-oss/tinytime.rs/pull/146))
