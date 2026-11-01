@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1](https://github.com/moia-oss/tinytime.rs/compare/v0.16.0...v0.16.1) - 2026-11-01
+
+### Other
+
+- Bump jdx/mise-action from 4.3.0 to 5.2.0 in the github-actions group ([#163](https://github.com/moia-oss/tinytime.rs/pull/163))
+- Bump the cargo group with 3 updates ([#164](https://github.com/moia-oss/tinytime.rs/pull/164))
+- Bump jiff from 0.2.35 to 0.2.37 in the cargo group ([#162](https://github.com/moia-oss/tinytime.rs/pull/162))
+- Bump jiff from 0.2.28 to 0.2.35 in the cargo group ([#161](https://github.com/moia-oss/tinytime.rs/pull/161))
+- improve housekeeping setup ([#159](https://github.com/moia-oss/tinytime.rs/pull/159))
+
 ## [0.16.0](https://github.com/moia-oss/tinytime.rs/compare/v0.15.0...v0.16.0) - 2026-09-24
 
 ### Other
